@@ -15,9 +15,13 @@
     "build": "npm run build --workspaces --if-present"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.6.6",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^3.0.4"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3"
   }
 }
