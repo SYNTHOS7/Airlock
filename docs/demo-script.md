@@ -77,6 +77,7 @@
 - **Voiceover:**
   > "Every transition, decision, evidence payload, and simulated fault is recorded in our append-only audit log.
   >
-  > With 128 passing automated tests, official Model Context Protocol integration, and zero direct rail bypass, Airlock makes financial AI safe for the real world.
+  > With 132 passing automated tests, official Model Context Protocol integration, and zero direct rail bypass, Airlock makes financial AI safe for the real world.
   >
   > Thank you."
+

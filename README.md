@@ -125,6 +125,30 @@ Airlock implements the official **Model Context Protocol (MCP)** specification o
 
 > **Security Guard:** Caller identity is extracted exclusively from connection authentication (`x-airlock-user` or Bearer token). The tool arguments **never** accept caller identity, eliminating spoofing.
 
+### MCP Client Integration (Claude Desktop / Antigravity / Cursor)
+
+Add Airlock to your MCP client configuration (e.g. `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "airlock": {
+      "command": "node",
+      "args": ["d:/Airlock/services/mcp-server/dist/cli.js"],
+      "env": {
+        "DATABASE_PATH": "d:/Airlock/data/airlock.db",
+        "AIRLOCK_USER": "agent_1"
+      }
+    }
+  }
+}
+```
+
+Or run directly via npm:
+```bash
+npm run mcp
+```
+
 ---
 
 ## 5. Monorepo Structure
@@ -205,7 +229,7 @@ TYPESAFE_BASE_URL=https://api.typesafe.ai
 # Build all monorepo packages
 npm run build
 
-# Run the full test suite (128 unit, integration, conformance & adversarial tests)
+# Run the full test suite (132 unit, integration, conformance & adversarial tests)
 npm test
 ```
 
@@ -226,7 +250,7 @@ Open [http://localhost:3000](http://localhost:3000) to view:
 
 ## 7. Testing & Empirical Evaluation
 
-### Test Coverage Breakdown (128 Passed, 4 Skipped)
+### Test Coverage Breakdown (132 Passed, 4 Skipped)
 - `packages/contracts`: Minor-unit money arithmetic, SHA-256 fingerprinting, guarded state transitions, monotonic strictness ordering.
 - `packages/storage`: SQLite WAL mode, idempotency parameter conflict detection (`IDEMP-002`), startup crash reconciliation (`reconcileStartupOperations`).
 - `services/policy-engine`: Deterministic rules (`AUTH-001`, `INPUT-001`, `STATE-001`, `LIMIT-001`, `LIMIT-002`, `VELOCITY-001`, `APPROVAL-001`, `UNCERTAIN-001`).

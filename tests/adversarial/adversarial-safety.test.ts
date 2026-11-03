@@ -638,4 +638,20 @@ describe('Day 6 Block 4: Hardened Adversarial, Safety & Fault Injection Suite', 
       expect(refundsOnRail.length).toBe(0);
     });
   });
+
+  describe('7. Fault Injection Safety Invariants', () => {
+    it('is off by default (mode = "none")', () => {
+      const wrapper = new FaultInjectedAdapter(adapter, repo);
+      expect(wrapper.getMode()).toBe('none');
+    });
+
+    it('strictly forbids enabling fault injection in production environments', () => {
+      expect(() => {
+        new FaultInjectedAdapter(adapter, repo, {
+          mode: 'drop_response',
+          isProduction: true,
+        });
+      }).toThrow(/CRITICAL SAFETY VIOLATION: Fault injection is strictly forbidden in production/);
+    });
+  });
 });

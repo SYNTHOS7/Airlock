@@ -234,5 +234,24 @@ describe('Day 5: Provider Conformance Suite & Outcome Verification', () => {
       expect(opFinal.state).toBe(OperationStateEnum.NEEDS_REVIEW);
     });
   });
+
+  describe('Safety Invariants & Rail Boundaries', () => {
+    it('strictly refuses live production PayPal endpoints (CRITICAL SAFETY GUARD)', () => {
+      expect(() => {
+        new PayPalSandboxAdapter({ baseUrl: 'https://api-m.paypal.com' });
+      }).toThrow(/CRITICAL SAFETY VIOLATION/);
+
+      expect(() => {
+        new PayPalSandboxAdapter({ baseUrl: 'https://api.paypal.com' });
+      }).toThrow(/CRITICAL SAFETY VIOLATION/);
+    });
+
+    it('allows valid PayPal sandbox URLs', () => {
+      expect(() => {
+        new PayPalSandboxAdapter({ baseUrl: 'https://api-m.sandbox.paypal.com' });
+      }).not.toThrow();
+    });
+  });
 });
+
 

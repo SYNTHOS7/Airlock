@@ -57,3 +57,4 @@ This document details the threat landscape, STRIDE categorization, failure modes
 1. **Demo Authentication:** For hackathon review and local testing, authentication is simulated using demo user roles (`agent_1`, `approver_1`, `viewer_1`). Production deployments must integrate standard OIDC/OAuth2 providers (e.g., Supabase Auth, Clerk, Auth0).
 2. **Single-Rail Transactions:** Currently refunds against captured charges are implemented. Void, capture, and multi-rail cross-settlement are architectural extensions.
 3. **Webhook Polling vs Ingestion:** Sandbox reconciliation operates via proactive lookup and same-key replay. Real-time PayPal webhooks can complement this polling layer in high-throughput environments.
+

@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b",
     "build": "npm run build --workspaces --if-present",
+    "mcp": "node services/mcp-server/dist/cli.js",
     "demo:reset": "tsx scripts/reset-demo.ts"
   },
   "devDependencies": {

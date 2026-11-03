@@ -7,7 +7,7 @@
       "unsafeBlockRate": 37.5,
       "falseBlockRate": 0,
       "correctAbstentionRate": 33.3,
-      "avgLatencyMs": 0.2
+      "avgLatencyMs": 0.1
     },
     "jevPolicy": {
       "accuracyRate": 100,
@@ -64,8 +64,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.9,
-      "jevLatencyMs": 0.8
+      "rulesOnlyLatencyMs": 1,
+      "jevLatencyMs": 0.6
     },
     {
       "id": "SAFE-002",
@@ -80,7 +80,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.2
+      "jevLatencyMs": 0.1
     },
     {
       "id": "SAFE-003",
@@ -95,7 +95,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "SAFE-004",
@@ -110,7 +110,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "SAFE-005",
@@ -124,8 +124,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 2.7,
-      "jevLatencyMs": 0.4
+      "rulesOnlyLatencyMs": 1.7,
+      "jevLatencyMs": 0.3
     },
     {
       "id": "SAFE-006",
@@ -169,7 +169,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.1,
+      "rulesOnlyLatencyMs": 0.2,
       "jevLatencyMs": 0.1
     },
     {
@@ -200,7 +200,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "UNCERTAIN-001",
@@ -259,8 +259,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": true,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "rulesOnlyLatencyMs": 0.1,
+      "jevLatencyMs": 0.1
     },
     {
       "id": "MISMATCH-002",

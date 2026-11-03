@@ -162,3 +162,4 @@ graph LR
 - If deterministic rules say `DENY`, an advisory model outputting `proceed` is strictly ignored; disposition remains `DENY`.
 - If deterministic rules say `ALLOW`, an advisory model outputting `injection_suspected` tightens disposition to `PAUSE_REVIEW`.
 - If the advisory service is offline or unreachable, the system fails closed by tightening `ALLOW` to `REQUIRE_APPROVAL` (Fail-Safe Default).
+
