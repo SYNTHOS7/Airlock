@@ -20,7 +20,7 @@ import {
   evaluate,
   loadPolicyFacts,
   type PolicyConfig,
-  type JevClient,
+  JevClient,
   buildJevInput,
 } from '@airlock/policy-engine';
 import { OutcomeVerifier } from '@airlock/provider-paypal-sandbox';
@@ -74,7 +74,7 @@ export class AirlockMcpTools {
     private config: PolicyConfig,
     private approvalService: ApprovalService,
     private executionService: ExecutionService,
-    private jevClient?: JevClient
+    private jevClient: JevClient = new JevClient()
   ) {
     this.verifier = new OutcomeVerifier(this.repo, this.adapter);
   }

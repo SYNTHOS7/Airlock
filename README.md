@@ -263,14 +263,14 @@ Open [http://localhost:3000](http://localhost:3000) to view:
 - **What they do not prove:** Concurrency performance under 10,000+ simultaneous transactions; multi-region active-active database replication.
 
 ### Model Evaluation: Rules-Only vs. Jev + Policy
-We evaluated 26 diverse financial scenarios across 6 categories (prompt injections, excessive limits, split refunds, ambiguous requests, valid returns, currency discrepancies):
+We evaluated 26 diverse financial scenarios across 6 categories (prompt injections, excessive limits, split refunds, ambiguous requests, valid returns, currency discrepancies) plus 8 held-out generalization scenarios (evaluating the deterministic local heuristic fallback):
 
 | Evaluation Set | Rules-Only Accuracy | Jev + Policy Accuracy | Jev Uplift | False Blocks |
 |---|---|---|---|---|
 | **Eval Scenarios (26)** | 50.0% (13/26) | **100.0% (26/26)** | +13 cases (+50.0%) | **0 cases (0.0%)** |
-| **Held-Out Scenarios (8)** | 37.5% (3/8) | **100.0% (8/8)** | +5 cases (+62.5%) | **0 cases (0.0%)** |
+| **Held-Out Scenarios (8)** | 50.0% (4/8) | **100.0% (8/8)** | +4 cases (+50.0%) | **0 cases (0.0%)** |
 
-**Key Finding:** Deterministic rules reliably catch numeric boundary violations (`LIMIT-001`, `LIMIT-002`), but are blind to linguistic manipulation. TypeSafe Jev accurately catches prompt injection and ambiguity inside untrusted text. Combining them monotonically yielded 100% accuracy with **zero false blocks** on legitimate requests.
+**Key Finding:** Deterministic rules reliably catch numeric boundary violations (`LIMIT-001`, `LIMIT-002`), but are blind to linguistic manipulation. TypeSafe Jev (and its local analytical heuristic fallback) accurately catches prompt injection and ambiguity inside untrusted text. Combining them monotonically yielded 100% accuracy with **zero false blocks** on legitimate requests.
 
 ---
 
@@ -315,14 +315,34 @@ flowchart LR
 
 ---
 
-## 9. Honest Limitations & Scope
+## 9. Honest Limitations & Operational Scope
 
-In accordance with hackathon guidelines, we explicitly state Airlock's operational boundaries:
-1. **Demo Authentication:** Demo roles (`agent_1`, `approver_1`, `viewer_1`) demonstrate separation of duties. Production requires integration with standard enterprise IdPs (OIDC/SAML).
-2. **Local SQLite Default:** Uses SQLite with WAL mode by default for zero-friction local testing; PostgreSQL schema is provided for Supabase.
-3. **Single Operation Type:** Currently implements payment refunds against captured charges. Voids and multi-rail cross-settlement are architectural extensions.
-4. **Simulated Fault Badging:** Injected network timeouts and delays are explicitly labeled in the UI with an amber `Simulated Fault` badge; real model and rail responses are never faked.
-5. **Reconciliation Polling:** Verification utilizes active provider lookups and same-key replays; real-time webhooks can complement this polling layer in production.
+In accordance with safety and evaluation guidelines, we explicitly state Airlock's operational boundaries:
+
+1. **No Production Claims:** Airlock is a functional prototype built for the PayPal AI Hackathon to demonstrate deterministic safety controls and outcome verification. It is **not** currently certified for live production banking or money transmission without further audits, high-availability storage clustering, and compliance reviews.
+2. **Verification Status (Live Sandbox vs. Mock):**
+   - **Deterministic Mock Adapter:** All 132 automated unit, integration, and adversarial tests currently run against `@airlock/provider-mock` and in-memory SQLite.
+   - **Live PayPal Sandbox Adapter:** Fully implemented in `@airlock/provider-paypal-sandbox` with v2 OAuth and refunds client. However, **no requests have been sent to live PayPal endpoints in this build environment** because live sandbox credentials (`PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET`) were not provided in `.env`. 4 tests in `tests/provider/conformance.test.ts` are gracefully skipped until credentials are provided.
+   - **Dropped-Response Demo Flow:** The lost-response fault simulation and outcome verification run strictly on the **mock provider** wrapped with `FaultInjectedAdapter`.
+3. **Jev Status (Real vs. Local Heuristic Fallback):**
+   - The Jev client (`services/policy-engine/src/jev/client.ts`) includes the live HTTP client for `https://api.typesafe.ai/v1/analyze`.
+   - In the absence of a `TYPESAFE_API_KEY`, the client operates in **deterministic local analytical fallback mode** (`jev-local-heuristic-v2`), evaluating prompt injection regexes, contradiction matching, and ambiguity rules locally. No external calls were made to live Jev servers.
+4. **Demo Authentication Only:**
+   - Identity is determined by simulated demo user roles (`agent_1`, `approver_1`, `viewer_1`) via `x-airlock-user` or demo bearer headers.
+   - Production requires replacing this with enterprise OIDC/OAuth2/SAML authentication (e.g., Supabase Auth, Clerk, Auth0).
+5. **Local SQLite Storage:**
+   - Defaults to local SQLite in WAL mode (`data/airlock.db`) for zero-friction local developer testing.
+   - A PostgreSQL schema is provided for Supabase / Render deployment.
+6. **Single Operation Type:**
+   - Only `REFUND` against existing captured payments is currently implemented. Voids, authorizations, captures, and multi-rail cross-settlement are architectural extensions.
+7. **Audit Log Architecture:**
+   - The audit log is an **append-oriented relational log** recording timestamped state transitions and evidence rows.
+   - **Cryptographic hash-chaining / Merkle tree verification is NOT built**; tamper-evidence currently relies on database role-level permissions (e.g., REVOKE UPDATE/DELETE).
+8. **Reconciliation Mechanism (Polling Only):**
+   - Verification utilizes active GET lookups and same-key idempotent replays.
+   - **Real-time PayPal webhooks are NOT built**; high-volume asynchronous push notifications are left for future infrastructure work.
+9. **Simulated Fault Labeling:**
+   - All injected network timeouts, drops, and delays are visibly labeled in the UI and audit logs with an amber `Simulated Fault (Mock Provider)` badge. Real financial actions or rail events are never fabricated.
 
 ---
 

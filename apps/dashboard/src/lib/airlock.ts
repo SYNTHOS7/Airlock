@@ -26,7 +26,7 @@ export function getAirlock() {
     const config = createPolicyConfig({
       approval_threshold_minor: Number(process.env.POLICY_APPROVAL_THRESHOLD_MINOR) || 5000, // $50.00
       cumulative_cap_minor: Number(process.env.POLICY_CUMULATIVE_CAP_MINOR) || 20000, // $200.00
-      velocity_max_count: Number(process.env.POLICY_VELOCITY_MAX_REFUNDS) || 5,
+      velocity_max_count: Number(process.env.POLICY_VELOCITY_MAX_REFUNDS) || 10,
       velocity_window_seconds: Number(process.env.POLICY_VELOCITY_WINDOW_SECONDS) || 3600,
     });
 

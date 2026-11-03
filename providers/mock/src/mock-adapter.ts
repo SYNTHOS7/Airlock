@@ -78,9 +78,11 @@ export class MockProviderAdapter implements ProviderAdapter {
 
   public async refund(cmd: RefundCommand): Promise<RefundResult> {
     // 1. Check Idempotency Key Replay (Spike Notes Exp 3 & 4)
+    // UNVERIFIED_SPIKE_FINDING: Modeled from docs/spike-notes.md Exp 3 & 4; not verified against live PayPal Sandbox.
     const existingEntry = this.idempotencyCache.get(cmd.provider_idempotency_key);
     if (existingEntry) {
       // Check for parameter mismatch (Exp 4)
+      // UNVERIFIED_SPIKE_FINDING (Exp 4): Error issue 'IDEMPOTENCY_PARAMETERS_MISMATCH' and HTTP 422 UNPROCESSABLE_ENTITY.
       const existingMinor = existingEntry.command.amount?.amount_minor;
       const incomingMinor = cmd.amount?.amount_minor;
       if (existingMinor !== incomingMinor) {
@@ -93,6 +95,7 @@ export class MockProviderAdapter implements ProviderAdapter {
         );
       }
       // Identical replay -> return existing refund without deducting again (Exp 3)
+      // UNVERIFIED_SPIKE_FINDING (Exp 3): Cache hit echoes original provider refund ID.
       return existingEntry.result;
     }
 
@@ -106,6 +109,7 @@ export class MockProviderAdapter implements ProviderAdapter {
     const refundAmount = cmd.amount ?? remaining;
 
     // 3. Check remaining refundable balance (Exp 7)
+    // UNVERIFIED_SPIKE_FINDING (Exp 7): PayPal returns HTTP 422 with issue 'CAPTURE_FULLY_REFUNDED' when exceeding balance.
     if (compareMoney(refundAmount, remaining) > 0) {
       throw new Error(
         JSON.stringify({

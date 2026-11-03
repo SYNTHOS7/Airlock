@@ -9,7 +9,8 @@
     { "path": "../../packages/contracts" },
     { "path": "../../packages/storage" },
     { "path": "../../services/policy-engine" },
-    { "path": "../../providers/mock" }
+    { "path": "../../providers/mock" },
+    { "path": "../../providers/paypal-sandbox" }
   ],
   "include": ["src/**/*"]
 }

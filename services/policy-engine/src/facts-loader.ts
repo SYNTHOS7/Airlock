@@ -70,7 +70,8 @@ export async function loadPolicyFacts(params: {
   // 3. Count recent requests by caller within window (for velocity checks)
   const callerRecentCount = repository.countRecentOperationsForRequester(
     caller_id,
-    config.velocity_window_seconds
+    config.velocity_window_seconds,
+    current_operation_id
   );
 
   return {

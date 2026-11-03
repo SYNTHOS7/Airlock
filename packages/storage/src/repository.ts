@@ -518,8 +518,19 @@ export class AirlockRepository {
   /**
    * Counts operations requested by a caller within a rolling time window (for VELOCITY-001).
    */
-  countRecentOperationsForRequester(requester_id: string, windowSeconds: number): number {
+  countRecentOperationsForRequester(
+    requester_id: string,
+    windowSeconds: number,
+    excludeOperationId?: string
+  ): number {
     const cutoff = new Date(Date.now() - windowSeconds * 1000).toISOString();
+    if (excludeOperationId) {
+      const result = this.db.prepare(`
+        SELECT COUNT(*) as count FROM operations 
+        WHERE requester_id = ? AND created_at >= ? AND operation_id != ?
+      `).get(requester_id, cutoff, excludeOperationId) as { count: number };
+      return result.count;
+    }
     const result = this.db.prepare(`
       SELECT COUNT(*) as count FROM operations 
       WHERE requester_id = ? AND created_at >= ?

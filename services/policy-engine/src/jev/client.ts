@@ -135,8 +135,11 @@ export class JevClient {
       'ignore previous instructions',
       'ignore all rules',
       'ignore policy',
+      'ignore safety',
       'override policy',
+      'system override',
       'bypass approval',
+      'bypass all',
       'do not check',
       'refund immediately without',
       'system prompt',
@@ -156,10 +159,10 @@ export class JevClient {
       intentMatch = 'no';
     }
 
-    // Check for amount mismatch (e.g. text mentions $10 but action is $50)
-    const amountMatch = text.match(/\$(\d+(?:\.\d{2})?)/);
+    // Check for amount mismatch (e.g. text mentions $10 but action is $50, or $10,000)
+    const amountMatch = text.match(/\$([0-9,]+(?:\.[0-9]{2})?)/);
     if (amountMatch && actionAmount) {
-      const mentionedAmount = parseFloat(amountMatch[1]);
+      const mentionedAmount = parseFloat(amountMatch[1].replace(/,/g, ''));
       const structuredAmount = parseFloat(actionAmount);
       if (Math.abs(mentionedAmount - structuredAmount) > 0.01) {
         intentMatch = 'no';

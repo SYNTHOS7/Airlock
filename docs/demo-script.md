@@ -45,14 +45,16 @@
 
 ### Scene 4: The Signature Demo – Simulated Lost Response & Recovery (1:20 – 2:05)
 - **Visual:**
-  1. Switch to Audit view to show the simulated fault badge on `req_seed_fault_sim` or run `scripts/sandbox-e2e.ts`.
+  1. Switch to Audit view to show the amber **`Simulated Fault (Mock Provider)`** badge on `req_seed_fault_sim`.
   2. Point out `OUTCOME_UNKNOWN` state.
   3. Show the subsequent retry being blocked by `UNCERTAIN-001` (`PAUSE_REVIEW`).
   4. Trigger `verify_outcome`: Verifier replays identical `PayPal-Request-Id`, discovers the existing refund, updates state to `SUCCEEDED`, proving **exactly one refund exists on the rail**.
 - **Voiceover:**
   > "Now for our signature safety demonstration: a payment rail network drop.
   > 
-  > Here, our fault-injection wrapper dropped the response right after the payment rail executed. Traditional systems treat network timeouts as failures and retry, creating duplicate refunds.
+  > Here, our fault-injection wrapper safely simulates a dropped network response against our deterministic mock adapter right after the payment rail executed. This allows deterministic, repeatable demonstration of network drops without relying on third-party flakiness.
+  > 
+  > Traditional systems treat network timeouts as failures and retry, creating duplicate refunds.
   > 
   > Airlock never marks a timeout as a failure. It transitions to OUTCOME_UNKNOWN. If the agent attempts a blind retry, rule UNCERTAIN-001 intervenes and halts execution.
   > 

@@ -1,6 +1,10 @@
 # Airlock --- PayPal Sandbox Spike & Experiment Notes
 
-This document captures the behavior, contracts, and error shapes observed and verified for the PayPal v2 Payments & Orders REST APIs, supporting the Mock Provider and Sandbox Adapter.
+> [!WARNING]
+> **UNVERIFIED IN LIVE SANDBOX (NOT RUN):**
+> Due to the absence of live PayPal Sandbox credentials (`PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET`) in this execution environment, none of the 7 experiments below were executed against live PayPal API endpoints during this build.
+> All request payloads, HTTP response codes, and error structures below are **derived from official PayPal v2 Orders & Payments REST documentation** and hackathon design requirements.
+> They are implemented and verified via Airlock's deterministic test adapter (`@airlock/provider-mock`). Live verification remains open until valid sandbox credentials are provided in `.env`.
 
 ---
 
@@ -79,6 +83,7 @@ This document captures the behavior, contracts, and error shapes observed and ve
 ## Block 3: The 7 Spike Experiments
 
 ### Experiment 1: Baseline Refund
+- **Status:** **NOT RUN** (Derived from PayPal API Spec)
 - **Request:** `POST /v2/payments/captures/CAP-80W284485P519543T/refund`
 - **Headers:**
   - `PayPal-Request-Id: req_airlock_exp1_001`
@@ -120,6 +125,7 @@ This document captures the behavior, contracts, and error shapes observed and ve
 ---
 
 ### Experiment 2: Refund Lookup by ID
+- **Status:** **NOT RUN** (Derived from PayPal API Spec)
 - **Request:** `GET /v2/payments/refunds/REF-9RN123456789`
 - **Response (HTTP 200 OK):**
   - Confirms `status: "COMPLETED"`, `custom_id: "airlock_op_98765"`, and links to parent capture `up`.
@@ -127,6 +133,7 @@ This document captures the behavior, contracts, and error shapes observed and ve
 ---
 
 ### Experiment 3: Replay with Identical PayPal-Request-Id & Identical Body
+- **Status:** **NOT RUN** (Derived from PayPal API Spec)
 - **Request:** `POST /v2/payments/captures/CAP-80W284485P519543T/refund`
 - **Headers:** `PayPal-Request-Id: req_airlock_exp1_001` (same as Exp 1)
 - **Body:** Identical payload (10.00 USD, same custom_id)
@@ -138,6 +145,7 @@ This document captures the behavior, contracts, and error shapes observed and ve
 ---
 
 ### Experiment 4: Same PayPal-Request-Id, Different Body (Parameter Mismatch)
+- **Status:** **NOT RUN** (Derived from PayPal API Spec)
 - **Request:** `POST /v2/payments/captures/CAP-80W284485P519543T/refund`
 - **Headers:** `PayPal-Request-Id: req_airlock_exp1_001`
 - **Body:** Different amount (`"value": "5.00"`)
@@ -160,6 +168,7 @@ This document captures the behavior, contracts, and error shapes observed and ve
 ---
 
 ### Experiment 5: New PayPal-Request-Id, Same Amount
+- **Status:** **NOT RUN** (Derived from PayPal API Spec)
 - **Request:** `POST /v2/payments/captures/CAP-80W284485P519543T/refund`
 - **Headers:** `PayPal-Request-Id: req_airlock_exp5_002` (New Key)
 - **Body:** `"value": "10.00"`
@@ -170,6 +179,7 @@ This document captures the behavior, contracts, and error shapes observed and ve
 ---
 
 ### Experiment 6: Capture Details After Refunds
+- **Status:** **NOT RUN** (Derived from PayPal API Spec)
 - **Request:** `GET /v2/payments/captures/CAP-80W284485P519543T`
 - **Response (HTTP 200 OK):**
 ```json
@@ -190,6 +200,7 @@ This document captures the behavior, contracts, and error shapes observed and ve
 ---
 
 ### Experiment 7: Over-Refund and Refund of Fully Refunded Capture
+- **Status:** **NOT RUN** (Derived from PayPal API Spec)
 - **Request:** Attempting another refund when remaining balance is zero.
 - **Response (HTTP 422 Unprocessable Entity):**
 ```json

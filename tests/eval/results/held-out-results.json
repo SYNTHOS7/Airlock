@@ -59,7 +59,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -165,7 +165,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     }
   ]
 }
