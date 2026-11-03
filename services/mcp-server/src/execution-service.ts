@@ -62,34 +62,39 @@ export class ExecutionService {
       );
     }
 
-    // 1. Load approval record
+    // 1. Verify approval if operation required approval
+    const decision = this.repo.getDecisionByOperationId(op.operation_id);
+    const isAutoAllowed = decision?.final_disposition === DispositionEnum.ALLOW;
+
     const approval = this.repo.getApprovalByOperationId(op.operation_id);
-    if (!approval) {
-      throw new ExecutionServiceError('NO_APPROVAL', 'No approval record found for this operation.');
-    }
+    if (!isAutoAllowed) {
+      if (!approval) {
+        throw new ExecutionServiceError('NO_APPROVAL', 'No approval record found for this operation.');
+      }
 
-    if (approval.status !== 'APPROVED') {
-      throw new ExecutionServiceError(
-        'APPROVAL_NOT_GRANTED',
-        `Approval is in '${approval.status}' state; must be 'APPROVED'.`
-      );
-    }
+      if (approval.status !== 'APPROVED') {
+        throw new ExecutionServiceError(
+          'APPROVAL_NOT_GRANTED',
+          `Approval is in '${approval.status}' state; must be 'APPROVED'.`
+        );
+      }
 
-    if (new Date(approval.expires_at).getTime() < Date.now()) {
-      throw new ExecutionServiceError('APPROVAL_EXPIRED', 'Approval has expired.');
-    }
+      if (new Date(approval.expires_at).getTime() < Date.now()) {
+        throw new ExecutionServiceError('APPROVAL_EXPIRED', 'Approval has expired.');
+      }
 
-    // Verify Action Hash
-    const expectedHash = computeActionHash({
-      operation_id: op.operation_id,
-      action_type: op.action_type,
-      payment_id: op.payment_id,
-      amount: op.amount ?? undefined,
-      provider: op.provider,
-    });
+      // Verify Action Hash
+      const expectedHash = computeActionHash({
+        operation_id: op.operation_id,
+        action_type: op.action_type,
+        payment_id: op.payment_id,
+        amount: op.amount ?? undefined,
+        provider: op.provider,
+      });
 
-    if (approval.action_hash !== expectedHash) {
-      throw new ExecutionServiceError('HASH_MISMATCH', 'Approval action hash does not match current operation.');
+      if (approval.action_hash !== expectedHash) {
+        throw new ExecutionServiceError('HASH_MISMATCH', 'Approval action hash does not match current operation.');
+      }
     }
 
     // 2. Pre-Execution Recheck (Core Safety Principle 7: Current state beats stale context)
@@ -108,6 +113,7 @@ export class ExecutionService {
       repository: this.repo,
       adapter: this.adapter,
       config: this.config,
+      current_operation_id: op.operation_id,
     });
 
     const recheckResult = evaluate(actionRequest, freshFacts, this.config);
@@ -133,8 +139,10 @@ export class ExecutionService {
       };
     }
 
-    // 3. Atomic Consume Approval
-    this.repo.consumeApproval(approval.approval_id);
+    // 3. Atomic Consume Approval if present
+    if (approval) {
+      this.repo.consumeApproval(approval.approval_id);
+    }
 
     // 4. Write-Ahead Record: Persist as EXECUTING before provider call
     this.repo.transitionOperation(

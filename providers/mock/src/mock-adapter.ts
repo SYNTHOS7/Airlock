@@ -153,6 +153,7 @@ export class MockProviderAdapter implements ProviderAdapter {
         id: refundId,
         status,
         custom_id: cmd.operation_id,
+        capture_id: cmd.capture_id,
         amount: {
           value: (refundAmount.amount_minor / 100).toFixed(2),
           currency_code: refundAmount.currency,
@@ -205,6 +206,16 @@ export class MockProviderAdapter implements ProviderAdapter {
       refunded_amount: capture.refunded_amount,
       remaining_refundable_amount: remaining,
     };
+  }
+
+  public getRefunds(): RefundResult[] {
+    return Array.from(this.refunds.values());
+  }
+
+  public getRefundsForCapture(captureId: string): RefundResult[] {
+    return Array.from(this.refunds.values()).filter(
+      (r) => (r.raw_response as any)?.capture_id === captureId
+    );
   }
 }
 

@@ -194,6 +194,10 @@ export class AirlockRepository {
     return this.getOperation(operation_id)!;
   }
 
+  getAuditLogsForOperation(operation_id: string): any[] {
+    return this.db.prepare('SELECT * FROM audit_log WHERE operation_id = ? ORDER BY audit_id ASC').all(operation_id);
+  }
+
   /**
    * Persists a decision record for an operation.
    */
@@ -249,6 +253,22 @@ export class AirlockRepository {
     };
   }
 
+  getDecisionByOperationId(operation_id: string): DecisionRecord | null {
+    const row = this.db.prepare('SELECT * FROM decisions WHERE operation_id = ? ORDER BY created_at DESC LIMIT 1').get(operation_id) as any;
+    if (!row) return null;
+    return {
+      decision_id: row.decision_id,
+      operation_id: row.operation_id,
+      jev_status: row.jev_status,
+      jev_signals: row.jev_signals ? JSON.parse(row.jev_signals) : null,
+      policy_result: row.policy_result,
+      policy_rule_ids: JSON.parse(row.policy_rule_ids),
+      policy_reason: row.policy_reason,
+      final_disposition: row.final_disposition,
+      created_at: row.created_at,
+    };
+  }
+
   /**
    * Creates an approval request bound to an action hash.
    */
@@ -297,6 +317,23 @@ export class AirlockRepository {
       expires_at: expires.toISOString(),
       consumed_at: null,
       created_at: now.toISOString(),
+    };
+  }
+
+  getApproval(approval_id: string): ApprovalRecord | null {
+    const row = this.db.prepare('SELECT * FROM approvals WHERE approval_id = ?').get(approval_id) as any;
+    if (!row) return null;
+    return {
+      approval_id: row.approval_id,
+      operation_id: row.operation_id,
+      action_hash: row.action_hash,
+      requester_id: row.requester_id,
+      approver_id: row.approver_id,
+      approver_role: row.approver_role,
+      status: row.status,
+      expires_at: row.expires_at,
+      consumed_at: row.consumed_at,
+      created_at: row.created_at,
     };
   }
 
@@ -428,6 +465,21 @@ export class AirlockRepository {
       data: params.data,
       created_at: now,
     };
+  }
+
+  getEvidenceForOperation(operation_id: string): EvidenceRecord[] {
+    const rows = this.db.prepare('SELECT * FROM evidence WHERE operation_id = ? ORDER BY created_at ASC').all(operation_id) as any[];
+    return rows.map((row) => ({
+      evidence_id: row.evidence_id,
+      operation_id: row.operation_id,
+      evidence_type: row.evidence_type,
+      provider_reference: row.provider_reference,
+      observed_status: row.observed_status,
+      outcome: row.outcome,
+      mismatch_flags: row.mismatch_flags ? JSON.parse(row.mismatch_flags) : [],
+      data: row.data ? JSON.parse(row.data) : null,
+      created_at: row.created_at,
+    }));
   }
 
   /**

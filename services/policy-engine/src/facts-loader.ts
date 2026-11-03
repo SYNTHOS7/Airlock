@@ -1,7 +1,7 @@
 import {
   type ProviderAdapter,
   type Money,
-  createMoney,
+  fromMinor,
   addMoney,
   OperationStateEnum,
 } from '@airlock/contracts';
@@ -15,6 +15,7 @@ export interface LoadFactsParams {
   adapter: ProviderAdapter;
   config: PolicyConfig;
   caller_roles?: CallerRole[];
+  current_operation_id?: string;
 }
 
 /**
@@ -28,8 +29,9 @@ export async function loadPolicyFacts(params: {
   adapter: ProviderAdapter;
   config: PolicyConfig;
   caller_roles?: CallerRole[];
+  current_operation_id?: string;
 }): Promise<PolicyFacts> {
-  const { caller_id, payment_id, repository, adapter, config, caller_roles } = params;
+  const { caller_id, payment_id, repository, adapter, config, caller_roles, current_operation_id } = params;
 
   // 1. Fetch live or mock capture state from adapter
   const capture = await adapter.getCapture(payment_id);
@@ -43,6 +45,11 @@ export async function loadPolicyFacts(params: {
   let priorAttemptState: any = null;
 
   for (const op of operations) {
+    // Exclude current operation from prior inflight/completed counts to prevent double-counting
+    if (current_operation_id && op.operation_id === current_operation_id) {
+      continue;
+    }
+
     const minor = op.amount?.amount_minor ?? 0;
 
     if (op.state === OperationStateEnum.SUCCEEDED) {
@@ -71,8 +78,8 @@ export async function loadPolicyFacts(params: {
     caller_roles: caller_roles ?? ['support_agent'],
     payment_capture_status: capture.status,
     remaining_refundable_amount: capture.remaining_refundable_amount,
-    completed_refunds_total: createMoney(completedMinor / 100, currency),
-    inflight_refunds_total: createMoney(inflightMinor / 100, currency),
+    completed_refunds_total: fromMinor(completedMinor, currency),
+    inflight_refunds_total: fromMinor(inflightMinor, currency),
     caller_recent_refunds_count: callerRecentCount,
     prior_attempt_state: priorAttemptState,
   };

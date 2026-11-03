@@ -154,6 +154,39 @@ export class OutcomeVerifier {
       );
     }
 
+    // Check if failure occurred before dispatch (proven not sent / fail_before_send)
+    const priorEvidence = this.repo.getEvidenceForOperation(op.operation_id);
+    const failedBeforeSend = priorEvidence.some(
+      (e) =>
+        e.evidence_type === 'simulated_fault' &&
+        e.observed_status === 'SIMULATED_FAIL_BEFORE_SEND'
+    );
+
+    if (failedBeforeSend) {
+      const evidence = this.repo.recordEvidence({
+        operation_id: op.operation_id,
+        evidence_type: 'verification_proven_not_sent',
+        observed_status: 'PROVEN_NOT_EXECUTED',
+        outcome: 'VERIFIED_FAILURE',
+        data: { reason: 'Request failed before dispatch; provider never received request.' },
+      });
+
+      this.repo.transitionOperation(
+        op.operation_id,
+        OperationStateEnum.FAILED,
+        'Proven not executed: connection dropped before provider dispatch.'
+      );
+
+      return {
+        operation_id: op.operation_id,
+        outcome: 'VERIFIED_FAILURE',
+        status: 'FAILED',
+        mismatch_flags: [],
+        reason: 'Proven not executed: request failed before dispatch to provider rail.',
+        evidence_id: evidence.evidence_id,
+      };
+    }
+
     try {
       // 1. Same-key replay with identical provider_idempotency_key (Spike Notes Exp 3)
       const replayResult = await this.adapter.refund({

@@ -17,14 +17,18 @@
   },
   "dependencies": {
     "@airlock/contracts": "*",
-    "@airlock/storage": "*",
     "@airlock/policy-engine": "*",
     "@airlock/provider-mock": "*",
+    "@airlock/provider-paypal-sandbox": "*",
+    "@airlock/storage": "*",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "zod": "^3.24.1"
+  },
+  "bin": {
+    "airlock-mcp": "./dist/cli.js"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "typescript": "^5.7.2"
   }
 }
-
