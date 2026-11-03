@@ -9,4 +9,6 @@ export * from './rules/limits.js';
 export * from './rules/velocity.js';
 export * from './rules/approval.js';
 export * from './rules/uncertain.js';
+export * from './jev/input-builder.js';
+export * from './jev/client.js';
 
