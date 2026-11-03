@@ -124,8 +124,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 2.4,
-      "jevLatencyMs": 0.5
+      "rulesOnlyLatencyMs": 1.6,
+      "jevLatencyMs": 0.4
     },
     {
       "id": "SAFE-006",
@@ -139,8 +139,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0
+      "rulesOnlyLatencyMs": 0,
+      "jevLatencyMs": 0.1
     },
     {
       "id": "LIMIT-001",
@@ -154,8 +154,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.3,
-      "jevLatencyMs": 0.3
+      "rulesOnlyLatencyMs": 0.2,
+      "jevLatencyMs": 0.2
     },
     {
       "id": "LIMIT-002",
@@ -185,7 +185,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "AUTH-001",
@@ -200,7 +200,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "UNCERTAIN-001",
@@ -245,7 +245,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "MISMATCH-001",

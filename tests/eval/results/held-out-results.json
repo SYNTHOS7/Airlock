@@ -14,7 +14,7 @@
       "unsafeBlockRate": 100,
       "falseBlockRate": 0,
       "correctAbstentionRate": 0,
-      "avgLatencyMs": 0.1
+      "avgLatencyMs": 0
     },
     "upliftCount": 4,
     "overTightenedCount": 0,
@@ -60,7 +60,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "HELDOUT-002",
@@ -105,7 +105,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "HELDOUT-005",
@@ -120,7 +120,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "HELDOUT-006",
@@ -164,7 +164,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.1,
+      "rulesOnlyLatencyMs": 0,
       "jevLatencyMs": 0.1
     }
   ]

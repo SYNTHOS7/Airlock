@@ -5,7 +5,8 @@
     { "path": "./packages/storage" },
     { "path": "./providers/mock" },
     { "path": "./services/policy-engine" },
-    { "path": "./services/mcp-server" }
+    { "path": "./services/mcp-server" },
+    { "path": "./providers/paypal-sandbox" }
   ]
 }
 
