@@ -83,6 +83,23 @@ describe('Contracts: ActionRequest and Cryptographic Fingerprints', () => {
 
     expect(hash1).toBe(hash2);
     expect(hash1).not.toBe(hashModified);
+
+    // Day 3 Block 1: Changing any single field changes the action hash
+    const base = {
+      operation_id: 'op_001',
+      action_type: 'REFUND',
+      payment_id: 'CAP-TEST123456',
+      amount: createMoney(25.0, 'USD'),
+      provider: 'paypal_sandbox',
+    };
+    const baseHash = computeActionHash(base);
+
+    expect(computeActionHash({ ...base, operation_id: 'op_002' })).not.toBe(baseHash);
+    expect(computeActionHash({ ...base, action_type: 'CAPTURE' })).not.toBe(baseHash);
+    expect(computeActionHash({ ...base, payment_id: 'CAP-DIFFERENT' })).not.toBe(baseHash);
+    expect(computeActionHash({ ...base, amount: createMoney(25.01, 'USD') })).not.toBe(baseHash);
+    expect(computeActionHash({ ...base, amount: createMoney(25.0, 'EUR') })).not.toBe(baseHash);
+    expect(computeActionHash({ ...base, provider: 'mock' })).not.toBe(baseHash);
   });
 });
 

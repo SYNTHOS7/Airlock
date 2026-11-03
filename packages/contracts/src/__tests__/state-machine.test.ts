@@ -57,10 +57,15 @@ describe('State Machine: Guarded Operation Lifecycle', () => {
       );
     });
 
-    it('allows READY -> EXECUTING', () => {
+    it('allows READY -> EXECUTING and READY -> DENIED (precheck failure)', () => {
       expect(canTransition(OperationStateEnum.READY, OperationStateEnum.EXECUTING)).toBe(true);
       expect(transition(OperationStateEnum.READY, OperationStateEnum.EXECUTING)).toBe(
         OperationStateEnum.EXECUTING
+      );
+
+      expect(canTransition(OperationStateEnum.READY, OperationStateEnum.DENIED)).toBe(true);
+      expect(transition(OperationStateEnum.READY, OperationStateEnum.DENIED)).toBe(
+        OperationStateEnum.DENIED
       );
     });
 

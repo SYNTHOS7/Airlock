@@ -61,7 +61,7 @@ export const ALLOWED_TRANSITIONS: Readonly<Record<OperationState, readonly Opera
     OperationStateEnum.READY,
   ],
   [OperationStateEnum.AWAITING_APPROVAL]: [OperationStateEnum.DENIED, OperationStateEnum.READY],
-  [OperationStateEnum.READY]: [OperationStateEnum.EXECUTING],
+  [OperationStateEnum.READY]: [OperationStateEnum.EXECUTING, OperationStateEnum.DENIED],
   [OperationStateEnum.EXECUTING]: [
     OperationStateEnum.SUCCEEDED,
     OperationStateEnum.FAILED,

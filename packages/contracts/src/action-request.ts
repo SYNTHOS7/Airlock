@@ -61,23 +61,26 @@ export function computeParamsFingerprint(request: {
 }
 
 /**
- * Computes an action hash for approvals binding to the exact action details.
+ * Computes an action hash for approvals binding to the exact action details (Day 3 Block 1).
  * Prevents approvals from being applied to modified amounts, targets, or providers.
+ * action_hash = SHA-256(canonical JSON of { operation_id, action_type, payment_id, amount_minor, currency, provider })
  */
 export function computeActionHash(params: {
   operation_id: string;
+  action_type?: string;
   payment_id: string;
   amount?: Money;
-  requester_id: string;
+  currency?: string;
   provider: string;
+  requester_id?: string;
 }): string {
   const payload = {
+    action_type: params.action_type ?? 'REFUND',
     amount_minor: params.amount?.amount_minor ?? null,
-    currency: params.amount?.currency ?? null,
+    currency: params.amount?.currency ?? params.currency ?? null,
     operation_id: params.operation_id,
     payment_id: params.payment_id,
     provider: params.provider,
-    requester_id: params.requester_id,
   };
   const jsonString = JSON.stringify(payload, Object.keys(payload).sort());
   return createHash('sha256').update(jsonString, 'utf8').digest('hex');
