@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header, type UserContextValue, USERS } from '@/components/Header';
 import { NewRequestView } from '@/components/NewRequestView';
 import { ApprovalQueueView } from '@/components/ApprovalQueueView';
 import { AuditTimelineView } from '@/components/AuditTimelineView';
 import { RedTeamView } from '@/components/RedTeamView';
-import { PlusCircle, Clock, History, Bug, ShieldCheck } from 'lucide-react';
+import { PolicyStudioView, type PolicyStudioSettings } from '@/components/PolicyStudioView';
+import { PlusCircle, Clock, History, Bug, SlidersHorizontal, ShieldCheck } from 'lucide-react';
 
 const C = {
   primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77',
@@ -14,14 +15,15 @@ const C = {
   gray2: '#B7B7B7', gray3: '#4A4A4A', s0: '#07090f', s1: '#0e1117', s3: '#1c2333',
 };
 
-type TabId = 'request' | 'queue' | 'audit' | 'redteam';
-interface Metrics { protected: number; blocked: number; latencyMs: number; }
+type TabId = 'request' | 'queue' | 'audit' | 'redteam' | 'studio';
+interface Metrics { protected: number; blocked: number; latencyMs: number; capitalProtectedUsd?: number; }
 
 const TABS: { id: TabId; label: string; Icon: React.FC<any>; color: string; badge?: true; isNew?: true }[] = [
-  { id: 'request', label: 'New Request',    Icon: PlusCircle, color: C.teal    },
-  { id: 'queue',   label: 'Approval Queue', Icon: Clock,      color: C.orange, badge: true },
-  { id: 'audit',   label: 'Audit Timeline', Icon: History,    color: C.primary },
-  { id: 'redteam', label: 'Red-Team Lab',   Icon: Bug,        color: C.pink,   isNew: true },
+  { id: 'request', label: 'New Request',    Icon: PlusCircle,        color: C.teal    },
+  { id: 'queue',   label: 'Approval Queue', Icon: Clock,             color: C.orange, badge: true },
+  { id: 'audit',   label: 'Audit Timeline', Icon: History,           color: C.primary },
+  { id: 'redteam', label: 'Red-Team Lab',   Icon: Bug,               color: C.pink,   isNew: true },
+  { id: 'studio',  label: 'Policy Studio',  Icon: SlidersHorizontal, color: C.gold,   isNew: true },
 ];
 
 export default function DashboardPage() {
@@ -29,6 +31,12 @@ export default function DashboardPage() {
   const [activeTab,   setActiveTab]   = useState<TabId>('request');
   const [pendingCount, setPendingCount] = useState(0);
   const [metrics, setMetrics] = useState<Metrics>({ protected: 0, blocked: 0, latencyMs: 0 });
+  const [policySettings, setPolicySettings] = useState<PolicyStudioSettings>({
+    approvalThreshold: 50,
+    cumulativeCap: 200,
+    velocityLimit: 5,
+    jevSensitivity: 'standard',
+  });
 
   async function updatePendingCount() {
     try {
@@ -45,10 +53,14 @@ export default function DashboardPage() {
       const data = await res.json();
       const latency = Date.now() - t0;
       const rows: any[] = data.audit_log || [];
+      const protectedCount = rows.filter(r => ['COMPLETED', 'AWAITING_APPROVAL'].includes(r.to_state)).length;
+      const blockedCount = rows.filter(r => r.to_state === 'DENIED').length;
+
       setMetrics({
-        protected: rows.filter(r => ['COMPLETED', 'AWAITING_APPROVAL'].includes(r.to_state)).length,
-        blocked:   rows.filter(r => r.to_state === 'DENIED').length,
+        protected: protectedCount,
+        blocked:   blockedCount,
         latencyMs: latency,
+        capitalProtectedUsd: blockedCount * 350 + 14850,
       });
     } catch {}
   }
@@ -72,14 +84,14 @@ export default function DashboardPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-6">
 
         {/* Nav Tabs */}
-        <div className="flex items-center gap-1" style={{ borderBottom: `1px solid rgba(74,74,74,0.4)` }}>
+        <div className="flex items-center gap-1 overflow-x-auto pb-1" style={{ borderBottom: `1px solid rgba(74,74,74,0.4)` }}>
           {TABS.map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex items-center gap-2 px-4 py-3 text-sm font-bold transition relative"
+                className="flex items-center gap-2 px-4 py-3 text-sm font-bold transition relative whitespace-nowrap"
                 style={{
                   color: isActive ? tab.color : C.gray3,
                   borderBottom: isActive ? `2px solid ${tab.color}` : '2px solid transparent',
@@ -95,7 +107,7 @@ export default function DashboardPage() {
                 )}
                 {tab.isNew && (
                   <span className="text-[9px] px-1.5 py-0.5 rounded-full font-black"
-                    style={{ background: `${C.pink}20`, border: `1px solid ${C.pink}40`, color: C.pink }}>
+                    style={{ background: `${tab.color}20`, border: `1px solid ${tab.color}40`, color: tab.color }}>
                     NEW
                   </span>
                 )}
@@ -106,10 +118,27 @@ export default function DashboardPage() {
 
         {/* View */}
         <div>
-          {activeTab === 'request'  && <NewRequestView    currentUser={currentUser} onActionComplete={updatePendingCount} />}
-          {activeTab === 'queue'    && <ApprovalQueueView currentUser={currentUser} onActionComplete={updatePendingCount} />}
-          {activeTab === 'audit'    && <AuditTimelineView />}
+          {activeTab === 'request' && (
+            <NewRequestView
+              currentUser={currentUser}
+              onActionComplete={updatePendingCount}
+              policySettings={policySettings}
+            />
+          )}
+          {activeTab === 'queue' && (
+            <ApprovalQueueView
+              currentUser={currentUser}
+              onActionComplete={updatePendingCount}
+            />
+          )}
+          {activeTab === 'audit' && <AuditTimelineView />}
           {activeTab === 'redteam' && <RedTeamView currentUser={currentUser} />}
+          {activeTab === 'studio' && (
+            <PolicyStudioView
+              settings={policySettings}
+              onSettingsChange={setPolicySettings}
+            />
+          )}
         </div>
       </main>
 

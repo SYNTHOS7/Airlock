@@ -212,6 +212,18 @@ describe('Deterministic Policy Engine: Rules, Boundaries & Monotonic Merge', () 
       expect(res.disposition).toBe(DispositionEnum.PAUSE_REVIEW); // Tightened!
       expect(res.ruleIds).toContain('JEV-001');
     });
+
+    it('freezes automated refund with PAYPAL-DISPUTE-001 when an active dispute exists', () => {
+      const disputeFacts: PolicyFacts = {
+        ...baseFacts,
+        payment_capture_status: 'DISPUTED',
+      };
+
+      const res = evaluate(baseRequest, disputeFacts, config);
+      expect(res.disposition).toBe(DispositionEnum.DENY);
+      expect(res.ruleIds).toContain('PAYPAL-DISPUTE-001');
+      expect(res.reasons[0]).toContain('Active PayPal dispute detected');
+    });
   });
 });
 

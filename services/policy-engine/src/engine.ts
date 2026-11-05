@@ -17,6 +17,7 @@ import { DEFAULT_POLICY_CONFIG } from './config.js';
 import { checkAuth } from './rules/auth.js';
 import { checkInput } from './rules/input.js';
 import { checkState } from './rules/state.js';
+import { checkPayPalDispute } from './rules/dispute.js';
 import { checkRemainingLimit, checkCumulativeCap } from './rules/limits.js';
 import { checkVelocity } from './rules/velocity.js';
 import { checkApprovalThreshold } from './rules/approval.js';
@@ -42,6 +43,7 @@ export function evaluate(
   const ruleResults: RuleResult[] = [
     checkAuth(facts),
     checkInput(request),
+    checkPayPalDispute(facts),
     checkState(facts),
     checkRemainingLimit(request, facts),
     checkCumulativeCap(request, facts, config),

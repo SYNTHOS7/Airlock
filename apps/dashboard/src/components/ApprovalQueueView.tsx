@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserCheck, ShieldAlert, Check, X, Clock, RefreshCw, AlertCircle, Hash, User, ArrowRight } from 'lucide-react';
+import { UserCheck, ShieldAlert, Check, X, Clock, RefreshCw, AlertCircle, Hash, User, ArrowRight, Smartphone, Fingerprint } from 'lucide-react';
 import type { UserContextValue } from './Header';
 
 const C = {
@@ -20,6 +20,7 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
   const [loading, setLoading] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ id: string; success: boolean; message: string } | null>(null);
+  const [mobileModalItem, setMobileModalItem] = useState<any | null>(null);
 
   async function fetchQueue() {
     setLoading(true);
@@ -212,28 +213,110 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-3 mt-4 pt-3"
+                <div className="flex items-center justify-between gap-3 mt-4 pt-3"
                   style={{ borderTop: `1px solid rgba(74,74,74,0.3)` }}>
                   <button
-                    onClick={() => handleAction(approval.approval_id, 'reject')}
-                    disabled={processingId === approval.approval_id || currentUser.role !== 'approver'}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition disabled:opacity-40"
-                    style={{ background: C.s3, border: `1px solid rgba(74,74,74,0.4)`, color: C.gray2 }}
+                    onClick={() => setMobileModalItem({ approval, operation })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold glass-card hover-neon transition"
+                    style={{ border: `1px solid rgba(74,74,74,0.4)`, color: C.primary }}
                   >
-                    <X className="w-3.5 h-3.5" /> Reject
+                    <Smartphone className="w-3.5 h-3.5" /> Mobile Simulator
                   </button>
-                  <button
-                    onClick={() => handleAction(approval.approval_id, 'approve')}
-                    disabled={!canApprove || processingId === approval.approval_id}
-                    className="btn-primary flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    {processingId === approval.approval_id ? 'Running Pre-check…' : 'Approve & Execute'}
-                  </button>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleAction(approval.approval_id, 'reject')}
+                      disabled={processingId === approval.approval_id || currentUser.role !== 'approver'}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition disabled:opacity-40"
+                      style={{ background: C.s3, border: `1px solid rgba(74,74,74,0.4)`, color: C.gray2 }}
+                    >
+                      <X className="w-3.5 h-3.5" /> Reject
+                    </button>
+                    <button
+                      onClick={() => handleAction(approval.approval_id, 'approve')}
+                      disabled={!canApprove || processingId === approval.approval_id}
+                      className="btn-primary flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      {processingId === approval.approval_id ? 'Running Pre-check…' : 'Approve & Execute'}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Mobile Simulator Modal */}
+      {mobileModalItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-count-up">
+          <div className="relative w-full max-w-sm rounded-[36px] p-5 shadow-2xl border-4"
+            style={{ background: '#0a0d14', borderColor: '#222838', boxShadow: '0 0 50px rgba(74,144,226,0.3)' }}>
+            
+            {/* Notch */}
+            <div className="w-28 h-4 rounded-full mx-auto mb-4" style={{ background: '#1a1f2e' }} />
+
+            {/* Simulated Notification Header */}
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: C.primary }}>
+                  <ShieldAlert className="w-3.5 h-3.5 text-white" />
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-white leading-tight">PayPal Airlock Alert</div>
+                  <div className="text-[9px]" style={{ color: C.gray3 }}>Dual-Authorization Push</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileModalItem(null)}
+                className="text-xs p-1 rounded-full text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Notification Card */}
+            <div className="rounded-2xl p-4 mb-4" style={{ background: '#111726', border: '1px solid rgba(74,144,226,0.25)' }}>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: C.orange }}>
+                Requires Manager Dave Approval
+              </div>
+              <div className="text-xl font-black text-white mb-1">
+                ${mobileModalItem.operation.amount?.amount_minor ? (mobileModalItem.operation.amount.amount_minor / 100).toFixed(2) : '0.00'} USD
+              </div>
+              <div className="text-[11px] mb-2" style={{ color: C.gray2 }}>
+                Refund on <span className="font-mono text-white">{mobileModalItem.operation.payment_id}</span>
+              </div>
+              <div className="p-2 rounded-lg text-[10px] font-mono mb-2" style={{ background: '#060910', color: C.teal }}>
+                Reason: "{mobileModalItem.operation.reason}"
+              </div>
+              <div className="text-[9px] font-mono break-all p-1.5 rounded" style={{ background: '#060910', color: C.gray3 }}>
+                HASH: {mobileModalItem.approval.action_hash.slice(0, 32)}…
+              </div>
+            </div>
+
+            {/* FaceID / Biometric Action */}
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  const id = mobileModalItem.approval.approval_id;
+                  setMobileModalItem(null);
+                  handleAction(id, 'approve');
+                }}
+                disabled={currentUser.role !== 'approver'}
+                className="w-full btn-primary py-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-black shadow-lg disabled:opacity-40"
+              >
+                <Fingerprint className="w-4 h-4 text-cyan-300" />
+                Authorize with FaceID / Biometrics
+              </button>
+              <button
+                onClick={() => setMobileModalItem(null)}
+                className="w-full py-2 rounded-2xl text-[11px] font-semibold text-slate-400 hover:text-white"
+              >
+                Dismiss to Dashboard
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

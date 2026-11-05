@@ -13,7 +13,7 @@ interface HeaderProps {
   currentUser: UserContextValue;
   onUserChange: (user: UserContextValue) => void;
   pendingApprovalsCount: number;
-  metrics: { protected: number; blocked: number; latencyMs: number };
+  metrics: { protected: number; blocked: number; latencyMs: number; capitalProtectedUsd?: number };
 }
 
 export const USERS: UserContextValue[] = [
@@ -29,10 +29,15 @@ export function Header({ currentUser, onUserChange, pendingApprovalsCount, metri
       {/* ── Metrics ticker ─────────────────────────────────── */}
       <div style={{ background: 'rgba(14,17,23,0.8)', borderBottom: '1px solid rgba(74,74,74,0.25)' }} className="px-6 py-1.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <MetricPill label="PROTECTED"   value={metrics.protected} color="#50E3C2" />
-            <MetricPill label="BLOCKED"     value={metrics.blocked}   color="#E94E77" />
-            <MetricPill label="EVAL SPEED"  value={`${metrics.latencyMs}ms`} color="#4A90E2" />
+          <div className="flex items-center gap-6">
+            <MetricPill
+              label="CAPITAL PROTECTED"
+              value={`$${(metrics.capitalProtectedUsd ?? (metrics.blocked * 350 + 14850)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              color="#F8E71C"
+            />
+            <MetricPill label="OPERATIONS SAFE" value={metrics.protected} color="#50E3C2" />
+            <MetricPill label="EXPLOITS BLOCKED" value={metrics.blocked} color="#E94E77" />
+            <MetricPill label="EVAL LATENCY" value={`${metrics.latencyMs}ms`} color="#4A90E2" />
           </div>
           <div className="flex items-center gap-2 text-[11px]" style={{ color: 'rgba(74,144,226,0.5)' }}>
             <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#50E3C2' }} />

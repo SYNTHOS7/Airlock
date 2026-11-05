@@ -9,6 +9,16 @@ export function checkState(facts: PolicyFacts): RuleResult {
   const allowedStates = ['COMPLETED', 'PARTIALLY_REFUNDED'];
   const isRefundable = allowedStates.includes(facts.payment_capture_status);
 
+  // If dispute is detected, let PAYPAL-DISPUTE-001 handle it specifically
+  if (facts.payment_capture_status === 'DISPUTED' || facts.payment_capture_status === 'CHARGEBACK') {
+    return {
+      triggered: false,
+      rule_id: 'STATE-001',
+      disposition: DispositionEnum.ALLOW,
+      reason: 'Deferred to PAYPAL-DISPUTE-001.',
+    };
+  }
+
   if (!isRefundable) {
     return {
       triggered: true,
@@ -25,4 +35,3 @@ export function checkState(facts: PolicyFacts): RuleResult {
     reason: 'Payment is in a refundable state.',
   };
 }
-

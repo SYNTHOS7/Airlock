@@ -23,7 +23,7 @@ export type MockAdapterMode =
 
 export interface MockCaptureState {
   capture_id: string;
-  status: 'COMPLETED' | 'PENDING' | 'REFUNDED' | 'PARTIALLY_REFUNDED';
+  status: 'COMPLETED' | 'PENDING' | 'REFUNDED' | 'PARTIALLY_REFUNDED' | 'DISPUTED';
   original_amount: Money;
   refunded_amount: Money;
 }
@@ -61,12 +61,17 @@ export class MockProviderAdapter implements ProviderAdapter {
     this.seedCapture('CAP-DEFAULT-100', createMoney(100.0, 'USD'));
     this.seedCapture('CAP-SMALL-20', createMoney(20.0, 'USD'));
     this.seedCapture('CAP-LARGE-500', createMoney(500.0, 'USD'));
+    this.seedCapture('CAP-CLEAN-001', createMoney(100.0, 'USD'));
+    this.seedCapture('CAP-LARGE-200', createMoney(200.0, 'USD'));
+    this.seedCapture('CAP-DENY-001', createMoney(500.0, 'USD'));
+    this.seedCapture('CAP-DISPUTE-001', createMoney(150.0, 'USD'), 'DISPUTED');
+    this.seedCapture('CAP-TIMEOUT-001', createMoney(100.0, 'USD'));
   }
 
-  public seedCapture(capture_id: string, amount: Money): void {
+  public seedCapture(capture_id: string, amount: Money, status: 'COMPLETED' | 'PENDING' | 'REFUNDED' | 'PARTIALLY_REFUNDED' | 'DISPUTED' = 'COMPLETED'): void {
     this.captures.set(capture_id, {
       capture_id,
-      status: 'COMPLETED',
+      status,
       original_amount: amount,
       refunded_amount: createMoney(0, amount.currency),
     });

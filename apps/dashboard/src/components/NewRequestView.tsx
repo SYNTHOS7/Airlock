@@ -26,9 +26,12 @@ const C = {
   s4: '#232b3e',
 };
 
+import type { PolicyStudioSettings } from './PolicyStudioView';
+
 interface NewRequestViewProps {
   currentUser: UserContextValue;
   onActionComplete: () => void;
+  policySettings?: PolicyStudioSettings;
 }
 
 // ── Presets ───────────────────────────────────────────────────────────────────
@@ -48,6 +51,14 @@ const PRESETS = [
     sublabel: '$120 — escalated',
     accent: C.orange,
     data: { paymentId: 'CAP-LARGE-200', amount: '120.00', reason: 'Customer dispute on order quality. Reviewed and partial refund agreed.' },
+  },
+  {
+    id: 'dispute',
+    emoji: '🛡️',
+    label: 'PayPal Dispute',
+    sublabel: 'Active chargeback freeze',
+    accent: C.pink,
+    data: { paymentId: 'CAP-DISPUTE-001', amount: '60.00', reason: 'Customer requested refund after filing PayPal chargeback dispute.' },
   },
   {
     id: 'deny',
@@ -91,7 +102,7 @@ const STAGES = [
 type StageId = typeof STAGES[number]['id'];
 type PipelineStatus = 'idle' | 'running' | 'allow' | 'require_approval' | 'deny';
 
-export function NewRequestView({ currentUser, onActionComplete }: NewRequestViewProps) {
+export function NewRequestView({ currentUser, onActionComplete, policySettings }: NewRequestViewProps) {
   const [paymentId, setPaymentId] = useState('CAP-DEFAULT-100');
   const [amount, setAmount] = useState('45.00');
   const [reason, setReason] = useState('Customer returned unused merchandise within policy');
@@ -145,7 +156,16 @@ export function NewRequestView({ currentUser, onActionComplete }: NewRequestView
       const res = await fetch('/api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-airlock-user': currentUser.id },
-        body: JSON.stringify({ payment_id: paymentId, amount_minor: amountMinor, currency: 'USD', reason, requester_id: currentUser.id }),
+        body: JSON.stringify({
+          payment_id: paymentId,
+          amount_minor: amountMinor,
+          currency: 'USD',
+          reason,
+          requester_id: currentUser.id,
+          approval_threshold_minor: policySettings ? policySettings.approvalThreshold * 100 : undefined,
+          cumulative_cap_minor: policySettings ? policySettings.cumulativeCap * 100 : undefined,
+          velocity_max_count: policySettings ? policySettings.velocityLimit : undefined,
+        }),
       });
       const data = await res.json();
       await pipelinePromise;
@@ -172,7 +192,16 @@ export function NewRequestView({ currentUser, onActionComplete }: NewRequestView
       const res = await fetch('/api/operations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-airlock-user': currentUser.id },
-        body: JSON.stringify({ payment_id: paymentId, amount_minor: amountMinor, currency: 'USD', reason, requester_id: currentUser.id }),
+        body: JSON.stringify({
+          payment_id: paymentId,
+          amount_minor: amountMinor,
+          currency: 'USD',
+          reason,
+          requester_id: currentUser.id,
+          approval_threshold_minor: policySettings ? policySettings.approvalThreshold * 100 : undefined,
+          cumulative_cap_minor: policySettings ? policySettings.cumulativeCap * 100 : undefined,
+          velocity_max_count: policySettings ? policySettings.velocityLimit : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Submission failed');
@@ -202,8 +231,8 @@ export function NewRequestView({ currentUser, onActionComplete }: NewRequestView
 
       {/* ── Preset Cards ─────────────────────────────────────────────── */}
       <div>
-        <SectionLabel text="Quick Scenarios" />
-        <div className="grid grid-cols-5 gap-3">
+        <SectionLabel text="Quick Scenarios (One-Click Testing)" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {PRESETS.map(preset => (
             <PresetCard
               key={preset.id}

@@ -30,6 +30,13 @@ export async function POST(req: Request) {
 
     const { repo, adapter, config, approvalService, executionService } = getAirlock();
 
+    const activeConfig = {
+      ...config,
+      ...(body.approval_threshold_minor != null ? { approval_threshold_minor: body.approval_threshold_minor } : {}),
+      ...(body.cumulative_cap_minor != null ? { cumulative_cap_minor: body.cumulative_cap_minor } : {}),
+      ...(body.velocity_max_count != null ? { velocity_max_count: body.velocity_max_count } : {}),
+    };
+
     const amount = body.amount_minor != null ? createMoney(body.amount_minor / 100, body.currency || 'USD') : undefined;
 
     const actionRequest: ActionRequest = {
@@ -67,11 +74,11 @@ export async function POST(req: Request) {
       payment_id: actionRequest.payment_id,
       repository: repo,
       adapter,
-      config,
+      config: activeConfig,
       caller_roles: user.roles,
     });
 
-    const evalResult = evaluate(actionRequest, facts, config);
+    const evalResult = evaluate(actionRequest, facts, activeConfig);
 
     repo.recordDecision({
       operation_id: operation.operation_id,
