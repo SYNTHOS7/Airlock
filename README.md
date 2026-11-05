@@ -47,15 +47,15 @@ sequenceDiagram
     alt Normal Execution
         MCP->>Rail: 8a. Dispatch refund with idempotent PayPal-Request-Id
         Rail-->>MCP: 8b. Status = COMPLETED
-        MCP->>DB: 8c. Record provider_response evidence; State = SUCCEEDED
+        MCP->>DB: 8c. Record provider_response evidence - State = SUCCEEDED
     else Network Timeout or Dropped Response
         MCP->>Rail: 9a. Dispatch refund (rail completes, network drops response)
         Rail--x MCP: 9b. Timeout error
-        MCP->>DB: 9c. Record provider_timeout; State = OUTCOME_UNKNOWN (NEVER FAILED)
-        Agent->>MCP: 9d. Retry blocked by UNCERTAIN-001; invokes verify_outcome
+        MCP->>DB: 9c. Record provider_timeout - State = OUTCOME_UNKNOWN (NEVER FAILED)
+        Agent->>MCP: 9d. Retry blocked by UNCERTAIN-001 - invokes verify_outcome
         MCP->>Verifier: 10a. Active reconciliation (same-key replay and capture balance)
         Verifier->>Rail: 10b. Same-key lookup (returns existing refund without duplicate debit)
-        Verifier->>DB: 10c. Record reconciliation evidence; State = SUCCEEDED
+        Verifier->>DB: 10c. Record reconciliation evidence - State = SUCCEEDED
     end
 ```
 
