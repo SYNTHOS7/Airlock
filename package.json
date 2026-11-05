@@ -16,7 +16,9 @@
     "build": "tsc -b && npm run build --workspace=@airlock/dashboard",
     "start": "node services/mcp-server/dist/cli.js",
     "mcp": "node services/mcp-server/dist/cli.js",
-    "demo:reset": "tsx scripts/reset-demo.ts"
+    "demo": "tsx scripts/interactive-demo.ts",
+    "demo:reset": "tsx scripts/reset-demo.ts",
+    "benchmark:100": "tsx scripts/run-benchmark-100.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

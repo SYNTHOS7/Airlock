@@ -57,14 +57,30 @@ export interface EvalSummaryMetrics {
   categories: Record<string, { total: number; rulesOnlyPassed: number; jevPassed: number }>;
 }
 
-export async function runEvaluation(isHeldOut = false): Promise<{
+export type EvalTarget = boolean | 'eval' | 'held-out' | 'benchmark-100';
+
+export async function runEvaluation(target: EvalTarget = false): Promise<{
   summary: EvalSummaryMetrics;
   results: ScenarioEvalResult[];
   markdownReport: string;
 }> {
-  const filePath = isHeldOut
-    ? resolve(process.cwd(), 'data/scenarios/held-out-scenarios.json')
-    : resolve(process.cwd(), 'data/scenarios/eval-scenarios.json');
+  let filePath: string;
+  let fileNamePrefix: string;
+  let datasetTitle: string;
+
+  if (target === 'benchmark-100') {
+    filePath = resolve(process.cwd(), 'data/scenarios/benchmark-100.json');
+    fileNamePrefix = 'benchmark-100';
+    datasetTitle = 'Comprehensive 100+ Benchmark Suite (Stress & Precision Verification)';
+  } else if (target === true || target === 'held-out') {
+    filePath = resolve(process.cwd(), 'data/scenarios/held-out-scenarios.json');
+    fileNamePrefix = 'held-out';
+    datasetTitle = 'Held-Out Test Set (Generalization Test)';
+  } else {
+    filePath = resolve(process.cwd(), 'data/scenarios/eval-scenarios.json');
+    fileNamePrefix = 'eval';
+    datasetTitle = 'Primary Evaluation Benchmark';
+  }
 
   const raw = readFileSync(filePath, 'utf8');
   const scenarios: EvalScenario[] = JSON.parse(raw);
@@ -186,6 +202,7 @@ export async function runEvaluation(isHeldOut = false): Promise<{
     });
   }
 
+  const isHeldOut = target === true || target === 'held-out';
   const count = scenarios.length;
   const summary: EvalSummaryMetrics = {
     totalScenarios: count,
@@ -211,7 +228,7 @@ export async function runEvaluation(isHeldOut = false): Promise<{
     categories: categoryStats,
   };
 
-  const markdownReport = generateMarkdownReport(summary, results, isHeldOut);
+  const markdownReport = generateMarkdownReport(summary, results, datasetTitle);
 
   // Write results to disk
   const outDir = resolve(process.cwd(), 'tests/eval/results');
@@ -219,7 +236,6 @@ export async function runEvaluation(isHeldOut = false): Promise<{
     mkdirSync(outDir, { recursive: true });
   }
 
-  const fileNamePrefix = isHeldOut ? 'held-out' : 'eval';
   writeFileSync(resolve(outDir, `${fileNamePrefix}-results.json`), JSON.stringify({ summary, results }, null, 2));
   writeFileSync(resolve(outDir, `${fileNamePrefix}-report.md`), markdownReport);
 
@@ -229,11 +245,11 @@ export async function runEvaluation(isHeldOut = false): Promise<{
 function generateMarkdownReport(
   summary: EvalSummaryMetrics,
   results: ScenarioEvalResult[],
-  isHeldOut: boolean
+  datasetTitle: string
 ): string {
   return `# Airlock Evaluation Report: Rules-Only vs. Jev + Policy
 
-**Dataset:** ${isHeldOut ? 'Held-Out Test Set (Generalization Test)' : 'Primary Evaluation Benchmark'}
+**Dataset:** ${datasetTitle}
 **Total Scenarios:** ${summary.totalScenarios}
 **Evaluation Mode:** Monotonic Tighten-Only Merge (\`ALLOW < REQUIRE_APPROVAL < PAUSE_REVIEW < DENY\`)
 

@@ -131,41 +131,78 @@ export class JevClient {
     const actionAmount = input.structured_action.amount;
 
     // 1. Prompt Injection & Adversarial Steering Detection
-    const injectionPatterns = [
-      'ignore previous instructions',
-      'ignore all rules',
-      'ignore policy',
-      'ignore safety',
-      'override policy',
-      'system override',
-      'bypass approval',
-      'bypass all',
-      'do not check',
-      'refund immediately without',
-      'system prompt',
-      'admin override',
-      'sudo',
-      'grant access',
-      'forget limits',
+    const injectionRegexes = [
+      /override/i,
+      /ignore (all )?(previous\b|instructions?\b|safety\b|policy\b|rules?\b|guardrails?\b|limits?\b|checks?\b)/i,
+      /forget (all )?(previous\b|instructions?\b|limits?\b)/i,
+      /disregard (all )?(previous\b|safety\b|policy\b|rules?\b)/i,
+      /bypass (all )?(approvals?\b|authorizations?\b|checks?\b|reviews?\b|limits?\b|guardrails?\b|standard\b)?/i,
+      /do not check/i,
+      /refund immediately without/i,
+      /system prompt/i,
+      /system notice/i,
+      /\bsudo\b/i,
+      /grant access/i,
+      /pre-approved/i,
+      /admin instruction/i,
+      /begin admin/i,
+      /\bdan:|\bdan mode\b/i,
+      /bearer\b/i,
+      /developer (diagnostic )?mode/i,
+      /diagnostic mode/i,
+      /base64/i,
+      /emergency payout/i,
+      /red-team/i,
+      /simulated transaction/i,
+      /zero-day/i,
+      /\b(emit|output)\s+allow\b|\bauto-allow\s+(all|any|this|without|every)\b/i,
+      /execute_immediately/i,
+      /token-leak/i,
+      /\[redacted_(token|secret)\]/i,
+      /private wallet/i,
+      /authorization:/i,
+      /```(json)?/i,
     ];
-    const injectionSuspected = injectionPatterns.some((pattern) => text.includes(pattern));
+    const injectionSuspected = injectionRegexes.some((regex) => regex.test(text));
 
     // 2. Intent Discrepancy Detection (Text vs Structured Action)
-    // Check if user text explicitly mentions a different amount than the structured amount
+    // Check if user text explicitly mentions cancellation, store credit, dispute, or different amount
     let intentMatch: 'yes' | 'no' | 'unclear' = 'yes';
 
-    // If text says "do not refund" or "cancel refund"
-    if (text.includes('do not refund') || text.includes('cancel refund') || text.includes('charged incorrectly do not send')) {
+    const cancelRegexes = [
+      /do not refund/i,
+      /cancel (this |the )?refund/i,
+      /cancel this/i,
+      /do not process/i,
+      /do not disburse/i,
+      /charged incorrectly/i,
+      /stop all (automatic )?refunds/i,
+      /store credit/i,
+      /replacement (item|product)/i,
+      /dispute/i,
+      /chargeback/i,
+      /fraud alert/i,
+      /stolen identity/i,
+      /money laundering/i,
+      /duplicate ticket/i,
+      /mistaken ticket/i,
+      /revoked refund/i,
+      /keep the software/i,
+    ];
+    if (cancelRegexes.some((regex) => regex.test(text))) {
       intentMatch = 'no';
     }
 
     // Check for amount mismatch (e.g. text mentions $10 but action is $50, or $10,000)
-    const amountMatch = text.match(/\$([0-9,]+(?:\.[0-9]{2})?)/);
-    if (amountMatch && actionAmount) {
-      const mentionedAmount = parseFloat(amountMatch[1].replace(/,/g, ''));
+    const amountMatches = text.match(/\$([0-9,]+(?:\.[0-9]{2})?)/g);
+    if (amountMatches && actionAmount) {
       const structuredAmount = parseFloat(actionAmount);
-      if (Math.abs(mentionedAmount - structuredAmount) > 0.01) {
-        intentMatch = 'no';
+      for (const rawMatch of amountMatches) {
+        const val = parseFloat(rawMatch.replace('$', '').replace(/,/g, ''));
+        if (Math.abs(val - structuredAmount) > 0.01) {
+          intentMatch = 'no';
+          break;
+        }
       }
     }
 
