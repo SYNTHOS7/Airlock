@@ -31,3 +31,4 @@ export function checkPayPalDispute(facts: PolicyFacts): RuleResult {
     reason: 'No active PayPal dispute on record.',
   };
 }
+

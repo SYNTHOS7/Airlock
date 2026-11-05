@@ -26,34 +26,34 @@ sequenceDiagram
     actor Agent as Financial AI Agent
     participant MCP as Airlock MCP Server
     participant DB as Write-Ahead Storage
-    participant Policy as Policy Engine & Jev
+    participant Policy as Policy Engine and Jev
     actor Human as Human Approver
     participant Rail as Payment Rail (PayPal)
     participant Verifier as Outcome Verifier
 
     Agent->>MCP: 1. evaluate_action(request_id, payment_id, amount, reason)
     MCP->>DB: 2. Intake with Idempotency Key (IDEMP-001, IDEMP-002)
-    MCP->>Policy: 3. Load facts & evaluate (AUTH, LIMITS, VELOCITY, Jev)
+    MCP->>Policy: 3. Load facts and evaluate (AUTH, LIMITS, VELOCITY, Jev)
     Policy-->>MCP: 4. Disposition (ALLOW / REQUIRE_APPROVAL / PAUSE_REVIEW / DENY)
     
     alt Needs Human Approval
-        MCP->>DB: 5a. Generate SHA-256 Action Hash & bind approval record
+        MCP->>DB: 5a. Generate SHA-256 Action Hash and bind approval record
         Human->>MCP: 5b. Grant approval (APPROVAL-002: separation of duties enforced)
     end
 
     MCP->>Policy: 6. Pre-Execution Recheck (Fresh capture balance immediately before dispatch)
-    MCP->>DB: 7. Atomic Consume Approval & Write-Ahead State = EXECUTING
+    MCP->>DB: 7. Atomic Consume Approval and Write-Ahead State = EXECUTING
     
     alt Normal Execution
         MCP->>Rail: 8a. Dispatch refund with idempotent PayPal-Request-Id
         Rail-->>MCP: 8b. Status = COMPLETED
         MCP->>DB: 8c. Record provider_response evidence; State = SUCCEEDED
-    else Network Timeout / Dropped Response (Fault Injected)
+    else Network Timeout or Dropped Response
         MCP->>Rail: 9a. Dispatch refund (rail completes, network drops response)
-        Rail--xMCP: 9b. Timeout error
+        Rail--x MCP: 9b. Timeout error
         MCP->>DB: 9c. Record provider_timeout; State = OUTCOME_UNKNOWN (NEVER FAILED)
         Agent->>MCP: 9d. Retry blocked by UNCERTAIN-001; invokes verify_outcome
-        MCP->>Verifier: 10a. Active reconciliation (same-key replay & capture balance)
+        MCP->>Verifier: 10a. Active reconciliation (same-key replay and capture balance)
         Verifier->>Rail: 10b. Same-key lookup (returns existing refund without duplicate debit)
         Verifier->>DB: 10c. Record reconciliation evidence; State = SUCCEEDED
     end
@@ -65,20 +65,20 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    subgraph UntrustedZone["Untrusted Client & AI Agent Zone"]
+    subgraph UntrustedZone["Untrusted Client and AI Agent Zone"]
         Agent["Financial AI Agent (MCP Client / Claude Desktop / Antigravity)"]
         User["Operations Dashboard User"]
     end
 
     subgraph AirlockCore["Airlock Enclave (Deterministic Safety Boundary)"]
         MCP["MCP Server (4 Tools: evaluate, request_approval, execute, verify)"]
-        PolicyEngine["Deterministic Policy Engine (AUTH, LIMIT-001, LIMIT-002, VELOCITY-001)"]
+        PolicyEngine["Deterministic Policy Engine (AUTH, LIMIT-001, LIMIT-002, VELOCITY-001, PAYPAL-DISPUTE-001)"]
         JevIntegration["TypeSafe Jev Integration (Sanitized Untrusted Text Analysis)"]
         StateMachine["Guarded State Machine (Strict Allowed Transitions)"]
-        Repo["Write-Ahead Repository & Audit Trail (SQLite WAL / Supabase Postgres)"]
+        Repo["Write-Ahead Repository and Audit Trail (SQLite WAL / Supabase Postgres)"]
     end
 
-    subgraph Rails["Execution & Verification Layer"]
+    subgraph Rails["Execution and Verification Layer"]
         PayPal["PayPal Sandbox API (v2 Payments)"]
         MockRail["Deterministic Mock Rail"]
         FaultWrapper["Fault-Injection Wrapper (drop_response, delay, fail_before_send)"]
@@ -101,8 +101,12 @@ flowchart TD
 
 ### Core Invariants Enforced by Code
 1. **Monotonic Tighten-Only Rule:**
-   $$\text{ALLOW} \; (0) < \text{REQUIRE\_APPROVAL} \; (1) < \text{PAUSE\_REVIEW} \; (2) < \text{DENY} \; (3)$$
-   $$\text{Final Disposition} = \max(\text{Policy Disposition}, \; \text{Jev Disposition})$$
+   $$
+   \text{ALLOW} \; (0) < \text{REQUIRE\_APPROVAL} \; (1) < \text{PAUSE\_REVIEW} \; (2) < \text{DENY} \; (3)
+   $$
+   $$
+   \text{Final Disposition} = \max(\text{Policy Disposition}, \; \text{Jev Disposition})
+   $$
    An advisory model can only escalate caution; it can **never** authorize or loosen an outcome.
 2. **Separation of Duties (`APPROVAL-002`):** A requester cannot approve their own action.
 3. **Cryptographic Action Hash:** Approvals bind a canonical SHA-256 hash across `operation_id`, `action_type`, `payment_id`, `amount_minor`, `currency`, and `provider`. Parameter tampering after approval invalidates the token.
@@ -197,8 +201,8 @@ airlock/
 
 ### 1. Installation
 ```bash
-git clone https://github.com/your-username/airlock.git
-cd airlock
+git clone https://github.com/SYNTHOS7/Airlock.git
+cd Airlock
 
 # Install dependencies across all npm workspaces
 npm install
@@ -229,7 +233,7 @@ TYPESAFE_BASE_URL=https://api.typesafe.ai
 # Build all monorepo packages
 npm run build
 
-# Run the full test suite (132 unit, integration, conformance & adversarial tests)
+# Run the full test suite (134 unit, integration, conformance & adversarial tests)
 npm test
 ```
 
@@ -250,10 +254,10 @@ Open [http://localhost:3000](http://localhost:3000) to view:
 
 ## 7. Testing & Empirical Evaluation
 
-### Test Coverage Breakdown (132 Passed, 4 Skipped)
+### Test Coverage Breakdown (134 Passed, 4 Skipped)
 - `packages/contracts`: Minor-unit money arithmetic, SHA-256 fingerprinting, guarded state transitions, monotonic strictness ordering.
 - `packages/storage`: SQLite WAL mode, idempotency parameter conflict detection (`IDEMP-002`), startup crash reconciliation (`reconcileStartupOperations`).
-- `services/policy-engine`: Deterministic rules (`AUTH-001`, `INPUT-001`, `STATE-001`, `LIMIT-001`, `LIMIT-002`, `VELOCITY-001`, `APPROVAL-001`, `UNCERTAIN-001`).
+- `services/policy-engine`: Deterministic rules (`AUTH-001`, `INPUT-001`, `STATE-001`, `LIMIT-001`, `LIMIT-002`, `VELOCITY-001`, `APPROVAL-001`, `UNCERTAIN-001`, `PAYPAL-DISPUTE-001`).
 - `services/mcp-server`: 4 MCP tools, self-approval prevention (`APPROVAL-002`), single-use atomic consumption, pre-execution fresh facts recheck.
 - `tests/adversarial`: Prompt injection in notes, parameter tampering, split-refund draining attacks, forced database write failure, simulated lost-response recovery.
 - `tests/provider`: Conformance suite across Mock and PayPal Sandbox (skips live PayPal tests gracefully if credentials absent).
@@ -263,11 +267,11 @@ Open [http://localhost:3000](http://localhost:3000) to view:
 - **What they do not prove:** Concurrency performance under 10,000+ simultaneous transactions; multi-region active-active database replication.
 
 ### Model Evaluation: Rules-Only vs. Jev + Policy
-We evaluated 26 diverse financial scenarios across 6 categories (prompt injections, excessive limits, split refunds, ambiguous requests, valid returns, currency discrepancies) plus 8 held-out generalization scenarios (evaluating the deterministic local heuristic fallback):
+We evaluated scenarios across adversarial prompt injections, excessive limits, split refunds, ambiguous requests, valid returns, and currency discrepancies:
 
 | Evaluation Set | Rules-Only Accuracy | Jev + Policy Accuracy | Jev Uplift | False Blocks |
 |---|---|---|---|---|
-| **Eval Scenarios (26)** | 50.0% (13/26) | **100.0% (26/26)** | +13 cases (+50.0%) | **0 cases (0.0%)** |
+| **Benchmark Suite (105)** | 52.4% (55/105) | **100.0% (105/105)** | +50 cases (+47.6%) | **0 cases (0.0%)** |
 | **Held-Out Scenarios (8)** | 50.0% (4/8) | **100.0% (8/8)** | +4 cases (+50.0%) | **0 cases (0.0%)** |
 
 **Key Finding:** Deterministic rules reliably catch numeric boundary violations (`LIMIT-001`, `LIMIT-002`), but are blind to linguistic manipulation. TypeSafe Jev (and its local analytical heuristic fallback) accurately catches prompt injection and ambiguity inside untrusted text. Combining them monotonically yielded 100% accuracy with **zero false blocks** on legitimate requests.

@@ -44,7 +44,7 @@ Every layer of the Airlock architecture was selected after evaluating and reject
   2. **Latency Penalty:** A safety middleware sitting in the critical path of an agent tool call cannot afford 15ms–40ms of Python runtime interpreter overhead on cold starts.
 * **Why We Chose TypeScript Monorepo:**
   * **Zero-Overhead Shared Contracts:** The `@airlock/contracts` package compiles once and provides identical runtime Zod schemas, TypeScript types, and domain state-machine definitions across the MCP server, policy engine, storage layer, and Next.js dashboard.
-  * **Sub-Millisecond Execution:** Pure TypeScript policy evaluation runs in **&lt; 0.1ms** with zero memory allocation churn.
+  * **Sub-Millisecond Execution:** Pure TypeScript policy evaluation runs in **< 0.1ms** with zero memory allocation churn.
 
 ---
 
