@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  UserCheck, ShieldAlert, Check, X, Clock,
-  RefreshCw, AlertCircle, Hash, User, ArrowRight
-} from 'lucide-react';
+import { UserCheck, ShieldAlert, Check, X, Clock, RefreshCw, AlertCircle, Hash, User, ArrowRight } from 'lucide-react';
 import type { UserContextValue } from './Header';
+
+const C = {
+  primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77',
+  violet: '#9013FE', gold: '#F8E71C', white: '#FFFFFF', gray1: '#D1D1D1',
+  gray2: '#B7B7B7', gray3: '#4A4A4A', s0: '#07090f', s1: '#0e1117', s2: '#151b26', s3: '#1c2333',
+};
 
 interface ApprovalQueueViewProps {
   currentUser: UserContextValue;
@@ -24,11 +27,8 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
       const res = await fetch('/api/approvals');
       const data = await res.json();
       setApprovals(data.approvals || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    } catch {}
+    finally { setLoading(false); }
   }
 
   useEffect(() => { fetchQueue(); }, []);
@@ -45,8 +45,7 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Action failed');
       setFeedback({
-        id: approvalId,
-        success: true,
+        id: approvalId, success: true,
         message: action === 'approve'
           ? '✓ Pre-execution recheck passed · Action executed on provider · WAL committed'
           : '✗ Action rejected → moved to DENIED state',
@@ -65,23 +64,23 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-white">Human Approval Queue</h2>
-          <p className="text-[11px] text-[#1e4d7a] mt-0.5">
+          <h2 className="text-base font-black text-white">Human Approval Queue</h2>
+          <p className="text-[11px] mt-0.5 font-medium" style={{ color: C.gray2 }}>
             Separation of Duties (APPROVAL-002) · SHA-256 cryptographic action-hash binding · Pre-execution policy recheck
           </p>
         </div>
         <button
-          onClick={fetchQueue}
-          disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass-card border border-[#0d2340] text-xs text-slate-300 hover:text-white hover:border-sky-500/30 transition"
+          onClick={fetchQueue} disabled={loading}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass-card text-xs font-semibold transition hover-neon"
+          style={{ border: `1px solid rgba(74,74,74,0.4)`, color: C.gray1 }}
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-sky-400' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} style={{ color: loading ? C.primary : undefined }} />
           Refresh
         </button>
       </div>
 
-      {/* How it works strip */}
-      <div className="glass-card rounded-xl p-4 border border-[#0d2340]">
+      {/* How it works */}
+      <div className="glass-card rounded-xl p-4" style={{ border: `1px solid rgba(74,74,74,0.4)` }}>
         <div className="flex items-center gap-0">
           {[
             { label: 'Agent Submits', sub: 'any user' },
@@ -93,11 +92,14 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
           ].map((step, i, arr) => (
             <React.Fragment key={step.label}>
               <div className="flex flex-col items-center flex-1">
-                <div className="w-6 h-6 rounded-full bg-[#0a1628] border border-[#0d2340] flex items-center justify-center text-[10px] font-bold text-sky-400">{i + 1}</div>
-                <div className="text-[10px] font-bold text-slate-300 mt-1 text-center">{step.label}</div>
-                <div className="text-[9px] text-[#1e4070] text-center">{step.sub}</div>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black"
+                  style={{ background: C.s3, border: `1px solid ${C.primary}50`, color: C.primary }}>
+                  {i + 1}
+                </div>
+                <div className="text-[10px] font-bold mt-1 text-center" style={{ color: C.gray1 }}>{step.label}</div>
+                <div className="text-[9px] text-center" style={{ color: C.gray3 }}>{step.sub}</div>
               </div>
-              {i < arr.length - 1 && <ArrowRight className="w-3 h-3 text-[#0d2340] flex-shrink-0 mb-4" />}
+              {i < arr.length - 1 && <ArrowRight className="w-3 h-3 flex-shrink-0 mb-4" style={{ color: C.gray3 }} />}
             </React.Fragment>
           ))}
         </div>
@@ -105,69 +107,73 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
 
       {/* Queue */}
       {approvals.length === 0 ? (
-        <div className="glass-card border border-dashed border-[#0d2340] rounded-xl p-14 text-center">
-          <div className="w-14 h-14 rounded-full bg-[#0a1628] border border-[#0d2340] flex items-center justify-center mx-auto mb-4">
-            <UserCheck className="w-7 h-7 text-[#1e4070]" />
+        <div className="glass-card rounded-xl p-14 text-center border-dashed" style={{ borderColor: 'rgba(74,74,74,0.35)' }}>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+            style={{ background: C.s3, border: `1px solid rgba(74,74,74,0.4)` }}>
+            <UserCheck className="w-7 h-7" style={{ color: C.gray3 }} />
           </div>
-          <p className="text-sm font-bold text-slate-400 mb-1">Queue is empty</p>
-          <p className="text-xs text-[#1e4070]">Submit a request over $50 from the New Request tab to see it here</p>
+          <p className="text-sm font-black" style={{ color: C.gray2 }}>Queue is empty</p>
+          <p className="text-xs mt-1" style={{ color: C.gray3 }}>Submit a request over $50 from the New Request tab to see it here</p>
         </div>
       ) : (
         <div className="space-y-4">
           {approvals.map(({ approval, operation }) => {
             const isRequester = currentUser.id === approval.requester_id;
-            const canApprove = currentUser.role === 'approver' && !isRequester;
-            const amountUsd = operation.amount?.amount_minor
-              ? (operation.amount.amount_minor / 100).toFixed(2)
-              : '0.00';
+            const canApprove  = currentUser.role === 'approver' && !isRequester;
+            const amountUsd   = operation.amount?.amount_minor
+              ? (operation.amount.amount_minor / 100).toFixed(2) : '0.00';
             const timeLeft = Math.max(0, Math.round((new Date(approval.expires_at).getTime() - Date.now()) / 60000));
 
             return (
-              <div
-                key={approval.approval_id}
-                className="glass-card border border-[#0d2340] hover-neon rounded-xl p-5 transition-all"
-              >
-                {/* Top row */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#0d2340]">
+              <div key={approval.approval_id}
+                className="glass-card rounded-xl p-5 hover-neon transition-all"
+                style={{ border: `1px solid rgba(74,74,74,0.4)` }}>
+
+                {/* Top */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-4"
+                  style={{ borderBottom: `1px solid rgba(74,74,74,0.3)` }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-amber-400" />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ background: `${C.orange}12`, border: `1px solid ${C.orange}30` }}>
+                      <Clock className="w-5 h-5" style={{ color: C.orange }} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">REFUND</span>
-                        <span className="text-lg font-black text-white tabular-nums">${amountUsd}</span>
-                        <span className="text-xs text-[#1e4d7a]">USD on {operation.payment_id}</span>
+                        <span className="text-xs font-black px-2 py-0.5 rounded font-mono"
+                          style={{ background: `${C.teal}12`, border: `1px solid ${C.teal}30`, color: C.teal }}>
+                          REFUND
+                        </span>
+                        <span className="text-lg font-black tabular-nums" style={{ color: C.white }}>${amountUsd}</span>
+                        <span className="text-xs" style={{ color: C.gray3 }}>USD on {operation.payment_id}</span>
                       </div>
-                      <div className="text-[11px] text-[#1e4070] mt-0.5">
-                        Expires in <span className="text-amber-400 font-semibold">{timeLeft} min</span>
+                      <div className="text-[11px] mt-0.5" style={{ color: C.gray3 }}>
+                        Expires in <span className="font-bold" style={{ color: C.orange }}>{timeLeft} min</span>
                       </div>
                     </div>
                   </div>
-                  <span className="badge-require inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full font-bold">
+                  <span className="badge-require inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full font-black">
                     <Clock className="w-3 h-3" /> AWAITING APPROVAL
                   </span>
                 </div>
 
-                {/* Detail grid */}
+                {/* Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 text-xs">
-                  <div className="bg-[#030e1e] p-3 rounded-lg border border-[#0d2340] space-y-2">
-                    <div className="flex items-center gap-1.5 text-[#1e4070]">
+                  <div className="p-3 rounded-lg space-y-2" style={{ background: C.s0, border: `1px solid rgba(74,74,74,0.3)` }}>
+                    <div className="flex items-center gap-1.5" style={{ color: C.gray3 }}>
                       <User className="w-3 h-3" /> Requester
                     </div>
-                    <div className="font-mono font-bold text-sky-300">{approval.requester_id}</div>
-                    <div className="text-[#1e4070] mt-1">Reason:</div>
-                    <div className="text-slate-300 italic text-[11px]">"{operation.reason}"</div>
+                    <div className="font-mono font-black" style={{ color: C.primary }}>{approval.requester_id}</div>
+                    <div style={{ color: C.gray3 }}>Reason:</div>
+                    <div className="italic text-[11px]" style={{ color: C.gray1 }}>"{operation.reason}"</div>
                   </div>
-
-                  <div className="bg-[#030e1e] p-3 rounded-lg border border-[#0d2340] space-y-2">
-                    <div className="flex items-center gap-1.5 text-[#1e4070]">
+                  <div className="p-3 rounded-lg space-y-2" style={{ background: C.s0, border: `1px solid rgba(74,74,74,0.3)` }}>
+                    <div className="flex items-center gap-1.5" style={{ color: C.gray3 }}>
                       <Hash className="w-3 h-3" /> SHA-256 Action Hash
                     </div>
-                    <div className="font-mono text-[10px] text-slate-500 break-all bg-[#060b14] p-2 rounded border border-[#0d2340] leading-relaxed">
+                    <div className="font-mono text-[10px] break-all p-2 rounded" style={{ background: '#030508', border: `1px solid rgba(74,74,74,0.25)`, color: C.gray2 }}>
                       {approval.action_hash}
                     </div>
-                    <p className="text-[9px] text-[#1e3a5f]">
+                    <p className="text-[9px]" style={{ color: C.gray3 }}>
                       Cryptographically binds this exact action. Re-verified immediately before execution. Any tampering = instant denial.
                     </p>
                   </div>
@@ -175,11 +181,12 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
 
                 {/* Feedback */}
                 {feedback && feedback.id === approval.approval_id && (
-                  <div className={`mt-3 p-3 rounded-lg text-xs flex items-start gap-2 ${
-                    feedback.success
-                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
-                      : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
-                  }`}>
+                  <div className="mt-3 p-3 rounded-lg text-xs flex items-start gap-2 animate-count-up"
+                    style={{
+                      background: feedback.success ? `${C.teal}10` : `${C.pink}10`,
+                      border: `1px solid ${feedback.success ? C.teal : C.pink}30`,
+                      color: feedback.success ? C.teal : C.pink,
+                    }}>
                     <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                     <span>{feedback.message}</span>
                   </div>
@@ -187,36 +194,41 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
 
                 {/* SoD warnings */}
                 {isRequester && (
-                  <div className="mt-3 p-3 rounded-lg bg-amber-500/8 border border-amber-500/20 text-amber-300 text-xs flex items-start gap-2">
+                  <div className="mt-3 p-3 rounded-lg text-xs flex items-start gap-2"
+                    style={{ background: `${C.orange}08`, border: `1px solid ${C.orange}25`, color: C.orange }}>
                     <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
                     <span>
-                      <strong>Self-approval blocked (APPROVAL-002):</strong> You submitted this request as{' '}
-                      <code className="text-amber-200 font-bold">{currentUser.id}</code>. A different human approver must review it. Switch to <strong>Manager Dave</strong>.
+                      <strong>Self-approval blocked (APPROVAL-002):</strong> You submitted this as{' '}
+                      <code className="font-black" style={{ color: C.gold }}>{currentUser.id}</code>. Switch to <strong>Manager Dave</strong> to approve.
                     </span>
                   </div>
                 )}
                 {currentUser.role !== 'approver' && !isRequester && (
-                  <div className="mt-3 p-2.5 rounded-lg bg-[#030e1e] border border-[#0d2340] text-[#1e4d7a] text-xs">
-                    Current role <strong className="text-slate-300">{currentUser.role}</strong> cannot approve. Only <strong className="text-amber-400">approver</strong> role may authorize consequential actions.
+                  <div className="mt-3 p-2.5 rounded-lg text-[11px]"
+                    style={{ background: C.s0, border: `1px solid rgba(74,74,74,0.3)`, color: C.gray3 }}>
+                    Role <strong style={{ color: C.gray1 }}>{currentUser.role}</strong> cannot approve. Only{' '}
+                    <strong style={{ color: C.orange }}>approver</strong> role may authorize consequential actions.
                   </div>
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-[#0d2340]">
+                <div className="flex items-center justify-end gap-3 mt-4 pt-3"
+                  style={{ borderTop: `1px solid rgba(74,74,74,0.3)` }}>
                   <button
                     onClick={() => handleAction(approval.approval_id, 'reject')}
                     disabled={processingId === approval.approval_id || currentUser.role !== 'approver'}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0a1628] hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 text-xs font-semibold transition border border-[#0d2340] hover:border-rose-500/30 disabled:opacity-40"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition disabled:opacity-40"
+                    style={{ background: C.s3, border: `1px solid rgba(74,74,74,0.4)`, color: C.gray2 }}
                   >
                     <X className="w-3.5 h-3.5" /> Reject
                   </button>
                   <button
                     onClick={() => handleAction(approval.approval_id, 'approve')}
                     disabled={!canApprove || processingId === approval.approval_id}
-                    className="flex items-center gap-1.5 px-5 py-2 rounded-lg btn-paypal text-xs font-bold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                    className="btn-primary flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    {processingId === approval.approval_id ? 'Running Pre-check...' : 'Approve & Execute'}
+                    {processingId === approval.approval_id ? 'Running Pre-check…' : 'Approve & Execute'}
                   </button>
                 </div>
               </div>

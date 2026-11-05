@@ -17,93 +17,83 @@ interface HeaderProps {
 }
 
 export const USERS: UserContextValue[] = [
-  { id: 'agent_1', name: 'Agent Sarah', role: 'support_agent' },
-  { id: 'approver_1', name: 'Manager Dave', role: 'approver' },
-  { id: 'viewer_1', name: 'Auditor Emma', role: 'viewer' },
+  { id: 'agent_1',   name: 'Agent Sarah',   role: 'support_agent' },
+  { id: 'approver_1',name: 'Manager Dave',  role: 'approver' },
+  { id: 'viewer_1',  name: 'Auditor Emma',  role: 'viewer' },
 ];
 
 export function Header({ currentUser, onUserChange, pendingApprovalsCount, metrics }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 border-b border-[#0d2340] bg-[#060b14]/95 backdrop-blur-xl">
-      {/* Top metrics bar */}
-      <div className="border-b border-[#0d1f38] bg-[#030810]/60 px-6 py-1.5">
+    <header className="sticky top-0 z-50" style={{ borderBottom: '1px solid rgba(74,74,74,0.4)', background: 'rgba(7,9,15,0.97)', backdropFilter: 'blur(20px)' }}>
+
+      {/* ── Metrics ticker ─────────────────────────────────── */}
+      <div style={{ background: 'rgba(14,17,23,0.8)', borderBottom: '1px solid rgba(74,74,74,0.25)' }} className="px-6 py-1.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-6 text-xs">
-            <MetricPill
-              label="OPERATIONS PROTECTED"
-              value={metrics.protected}
-              color="text-emerald-400"
-              glow="emerald"
-            />
-            <MetricPill
-              label="THREATS BLOCKED"
-              value={metrics.blocked}
-              color="text-rose-400"
-              glow="rose"
-            />
-            <MetricPill
-              label="AVG EVAL"
-              value={`${metrics.latencyMs}ms`}
-              color="text-sky-400"
-              glow="sky"
-            />
+          <div className="flex items-center gap-8">
+            <MetricPill label="PROTECTED"   value={metrics.protected} color="#50E3C2" />
+            <MetricPill label="BLOCKED"     value={metrics.blocked}   color="#E94E77" />
+            <MetricPill label="EVAL SPEED"  value={`${metrics.latencyMs}ms`} color="#4A90E2" />
           </div>
-          <div className="flex items-center gap-2 text-[11px] text-[#1e4d7a]">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-emerald-500 font-medium">MCP Server Live</span>
-            <span className="text-[#1e3a5f]">•</span>
+          <div className="flex items-center gap-2 text-[11px]" style={{ color: 'rgba(74,144,226,0.5)' }}>
+            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#50E3C2' }} />
+            <span style={{ color: '#50E3C2' }} className="font-semibold">MCP Live</span>
+            <span style={{ color: 'rgba(74,74,74,0.6)' }}>·</span>
             <span>PayPal AI Hackathon 2025</span>
           </div>
         </div>
       </div>
 
-      {/* Main header row */}
+      {/* ── Main header row ────────────────────────────────── */}
       <div className="px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center relative animate-float"
-              style={{ background: 'linear-gradient(135deg, #003087 0%, #009cde 100%)', boxShadow: '0 0 20px rgba(0,156,222,0.4)' }}>
-              <ShieldCheck className="w-5 h-5 text-white" />
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center animate-float"
+              style={{ background: 'linear-gradient(135deg,#4A90E2,#9013FE)', boxShadow: '0 0 24px rgba(74,144,226,0.45)' }}
+            >
+              <ShieldCheck className="w-6 h-6 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2.5">
                 <h1 className="font-black text-xl tracking-tight text-white">Airlock</h1>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold text-black"
-                  style={{ background: '#ffc439' }}>
-                  v1.0
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded border border-[#0d2340] text-[#1e6fa0] bg-[#030e1e]">
-                  Sandbox
-                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-black" style={{ background: '#F8E71C', color: '#07090f' }}>v1.0</span>
+                <span className="text-[10px] px-2 py-0.5 rounded font-medium" style={{ color: '#B7B7B7', border: '1px solid rgba(74,74,74,0.5)', background: 'rgba(21,27,38,0.8)' }}>Sandbox</span>
               </div>
-              <p className="text-[11px] text-[#2a6fa0] mt-0.5">
-                Zero-Trust Financial AI Safety Gateway · MCP Protocol
+              <p className="text-[11px] mt-0.5 font-medium" style={{ color: '#B7B7B7' }}>
+                Zero-Trust Financial AI Safety · MCP Protocol
               </p>
             </div>
           </div>
 
-          {/* Right side: identity + pending badge */}
+          {/* Right side */}
           <div className="flex items-center gap-3">
             {pendingApprovalsCount > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-semibold animate-pulse-glow">
+              <div
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold animate-pulse-orange"
+                style={{ background: 'rgba(245,166,35,0.12)', border: '1px solid rgba(245,166,35,0.3)', color: '#F5A623' }}
+              >
                 <Zap className="w-3.5 h-3.5" />
                 {pendingApprovalsCount} Awaiting Approval
               </div>
             )}
 
-            <div className="flex items-center gap-2 bg-[#0a1628] border border-[#0d2340] rounded-lg px-3 py-2">
-              <span className="text-[11px] text-[#1e4d7a] font-medium">Identity:</span>
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 py-2"
+              style={{ background: 'rgba(21,27,38,0.9)', border: '1px solid rgba(74,74,74,0.4)' }}
+            >
+              <span className="text-[11px] font-semibold" style={{ color: '#4A4A4A' }}>Identity:</span>
               <select
                 value={currentUser.id}
                 onChange={(e) => {
-                  const found = USERS.find((u) => u.id === e.target.value);
+                  const found = USERS.find(u => u.id === e.target.value);
                   if (found) onUserChange(found);
                 }}
-                className="bg-transparent text-sm text-slate-200 focus:outline-none cursor-pointer font-semibold"
+                className="bg-transparent text-sm font-bold focus:outline-none cursor-pointer"
+                style={{ color: '#D1D1D1' }}
               >
-                {USERS.map((user) => (
-                  <option key={user.id} value={user.id} className="bg-[#0a1628] text-slate-200">
+                {USERS.map(user => (
+                  <option key={user.id} value={user.id} style={{ background: '#0e1117', color: '#FFFFFF' }}>
                     {user.name}
                   </option>
                 ))}
@@ -117,23 +107,13 @@ export function Header({ currentUser, onUserChange, pendingApprovalsCount, metri
   );
 }
 
-function MetricPill({ label, value, color, glow }: {
-  label: string;
-  value: string | number;
-  color: string;
-  glow: 'emerald' | 'rose' | 'sky';
-}) {
-  const glowColors = {
-    emerald: 'rgba(16,185,129,0.15)',
-    rose: 'rgba(239,68,68,0.15)',
-    sky: 'rgba(14,165,233,0.15)',
-  };
+function MetricPill({ label, value, color }: { label: string; value: string | number; color: string }) {
   return (
     <div className="flex items-center gap-2">
-      <div className="w-1 h-6 rounded-full" style={{ background: glowColors[glow].replace('0.15', '0.8') }} />
+      <div className="w-0.5 h-6 rounded-full" style={{ background: color }} />
       <div>
-        <div className={`font-black tabular-nums text-sm ${color} animate-count-up`}>{value}</div>
-        <div className="text-[9px] text-[#1e4070] font-medium tracking-widest uppercase">{label}</div>
+        <div className="metric-num text-sm animate-count-up" style={{ color }}>{value}</div>
+        <div className="text-[9px] font-bold tracking-widest uppercase" style={{ color: 'rgba(74,74,74,0.9)' }}>{label}</div>
       </div>
     </div>
   );
@@ -141,17 +121,20 @@ function MetricPill({ label, value, color, glow }: {
 
 function RoleBadge({ role }: { role: string }) {
   if (role === 'support_agent') return (
-    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-medium">
+    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold"
+      style={{ background: 'rgba(74,144,226,0.12)', color: '#4A90E2', border: '1px solid rgba(74,144,226,0.25)' }}>
       <Bot className="w-3 h-3" /> Agent
     </span>
   );
   if (role === 'approver') return (
-    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold"
+      style={{ background: 'rgba(245,166,35,0.12)', color: '#F5A623', border: '1px solid rgba(245,166,35,0.25)' }}>
       <UserCheck className="w-3 h-3" /> Approver
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20 font-medium">
+    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold"
+      style={{ background: 'rgba(74,74,74,0.15)', color: '#B7B7B7', border: '1px solid rgba(74,74,74,0.3)' }}>
       <Eye className="w-3 h-3" /> Auditor
     </span>
   );

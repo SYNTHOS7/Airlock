@@ -8,20 +8,27 @@ import { AuditTimelineView } from '@/components/AuditTimelineView';
 import { RedTeamView } from '@/components/RedTeamView';
 import { PlusCircle, Clock, History, Bug, ShieldCheck } from 'lucide-react';
 
-type TabId = 'request' | 'queue' | 'audit' | 'redteam';
+const C = {
+  primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77',
+  violet: '#9013FE', gold: '#F8E71C', white: '#FFFFFF', gray1: '#D1D1D1',
+  gray2: '#B7B7B7', gray3: '#4A4A4A', s0: '#07090f', s1: '#0e1117', s3: '#1c2333',
+};
 
-interface Metrics {
-  protected: number;
-  blocked: number;
-  latencyMs: number;
-}
+type TabId = 'request' | 'queue' | 'audit' | 'redteam';
+interface Metrics { protected: number; blocked: number; latencyMs: number; }
+
+const TABS: { id: TabId; label: string; Icon: React.FC<any>; color: string; badge?: true; isNew?: true }[] = [
+  { id: 'request', label: 'New Request',    Icon: PlusCircle, color: C.teal    },
+  { id: 'queue',   label: 'Approval Queue', Icon: Clock,      color: C.orange, badge: true },
+  { id: 'audit',   label: 'Audit Timeline', Icon: History,    color: C.primary },
+  { id: 'redteam', label: 'Red-Team Lab',   Icon: Bug,        color: C.pink,   isNew: true },
+];
 
 export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<UserContextValue>(USERS[0]);
-  const [activeTab, setActiveTab] = useState<TabId>('request');
-  const [pendingCount, setPendingCount] = useState<number>(0);
+  const [activeTab,   setActiveTab]   = useState<TabId>('request');
+  const [pendingCount, setPendingCount] = useState(0);
   const [metrics, setMetrics] = useState<Metrics>({ protected: 0, blocked: 0, latencyMs: 0 });
-  const metricsRef = useRef<Metrics>({ protected: 0, blocked: 0, latencyMs: 0 });
 
   async function updatePendingCount() {
     try {
@@ -31,54 +38,30 @@ export default function DashboardPage() {
     } catch {}
   }
 
-  async function fetchAndUpdateMetrics() {
+  async function fetchMetrics() {
     try {
-      const t0 = Date.now();
+      const t0  = Date.now();
       const res = await fetch('/api/audit');
       const data = await res.json();
       const latency = Date.now() - t0;
       const rows: any[] = data.audit_log || [];
-
-      const protected_ = rows.filter(r =>
-        r.to_state === 'COMPLETED' || r.to_state === 'AWAITING_APPROVAL'
-      ).length;
-
-      const blocked = rows.filter(r =>
-        r.to_state === 'DENIED' || r.event_type === 'OPERATION_DENIED'
-      ).length;
-
-      const updated = { protected: protected_, blocked, latencyMs: latency };
-      metricsRef.current = updated;
-      setMetrics(updated);
+      setMetrics({
+        protected: rows.filter(r => ['COMPLETED', 'AWAITING_APPROVAL'].includes(r.to_state)).length,
+        blocked:   rows.filter(r => r.to_state === 'DENIED').length,
+        latencyMs: latency,
+      });
     } catch {}
   }
 
   useEffect(() => {
     updatePendingCount();
-    fetchAndUpdateMetrics();
-    const interval = setInterval(() => {
-      updatePendingCount();
-      fetchAndUpdateMetrics();
-    }, 6000);
-    return () => clearInterval(interval);
+    fetchMetrics();
+    const iv = setInterval(() => { updatePendingCount(); fetchMetrics(); }, 6000);
+    return () => clearInterval(iv);
   }, []);
 
-  const tabs: { id: TabId; label: string; Icon: React.FC<any>; color: string; badge?: number }[] = [
-    { id: 'request',  label: 'New Request',      Icon: PlusCircle,  color: 'emerald' },
-    { id: 'queue',    label: 'Approval Queue',   Icon: Clock,       color: 'amber', badge: pendingCount },
-    { id: 'audit',    label: 'Audit Timeline',   Icon: History,     color: 'sky' },
-    { id: 'redteam',  label: 'Red-Team Lab',     Icon: Bug,         color: 'rose' },
-  ];
-
-  const tabColorMap: Record<string, { active: string; icon: string }> = {
-    emerald: { active: 'border-b-2 border-emerald-500 text-emerald-400',  icon: 'text-emerald-400' },
-    amber:   { active: 'border-b-2 border-amber-500 text-amber-400',      icon: 'text-amber-400'   },
-    sky:     { active: 'border-b-2 border-sky-500 text-sky-400',          icon: 'text-sky-400'     },
-    rose:    { active: 'border-b-2 border-rose-500 text-rose-400',        icon: 'text-rose-400'    },
-  };
-
   return (
-    <div className="min-h-screen bg-[#060b14] text-slate-100 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: C.s0, color: C.white }}>
       <Header
         currentUser={currentUser}
         onUserChange={setCurrentUser}
@@ -89,29 +72,30 @@ export default function DashboardPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-6">
 
         {/* Nav Tabs */}
-        <div className="flex items-center gap-1 border-b border-[#0d2340] relative">
-          {tabs.map(tab => {
+        <div className="flex items-center gap-1" style={{ borderBottom: `1px solid rgba(74,74,74,0.4)` }}>
+          {TABS.map(tab => {
             const isActive = activeTab === tab.id;
-            const colors = tabColorMap[tab.color];
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition relative ${
-                  isActive
-                    ? colors.active
-                    : 'text-[#1e4d7a] hover:text-slate-300 border-b-2 border-transparent'
-                }`}
+                className="flex items-center gap-2 px-4 py-3 text-sm font-bold transition relative"
+                style={{
+                  color: isActive ? tab.color : C.gray3,
+                  borderBottom: isActive ? `2px solid ${tab.color}` : '2px solid transparent',
+                }}
               >
-                <tab.Icon className={`w-4 h-4 ${isActive ? colors.icon : ''}`} />
+                <tab.Icon className="w-4 h-4" />
                 {tab.label}
-                {tab.badge != null && tab.badge > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-black min-w-[18px] text-center">
-                    {tab.badge}
+                {tab.badge && pendingCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black min-w-[18px] text-center"
+                    style={{ background: C.orange, color: C.s0 }}>
+                    {pendingCount}
                   </span>
                 )}
-                {tab.id === 'redteam' && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">
+                {tab.isNew && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-black"
+                    style={{ background: `${C.pink}20`, border: `1px solid ${C.pink}40`, color: C.pink }}>
                     NEW
                   </span>
                 )}
@@ -122,27 +106,23 @@ export default function DashboardPage() {
 
         {/* View */}
         <div>
-          {activeTab === 'request' && (
-            <NewRequestView currentUser={currentUser} onActionComplete={updatePendingCount} />
-          )}
-          {activeTab === 'queue' && (
-            <ApprovalQueueView currentUser={currentUser} onActionComplete={updatePendingCount} />
-          )}
-          {activeTab === 'audit' && <AuditTimelineView />}
+          {activeTab === 'request'  && <NewRequestView    currentUser={currentUser} onActionComplete={updatePendingCount} />}
+          {activeTab === 'queue'    && <ApprovalQueueView currentUser={currentUser} onActionComplete={updatePendingCount} />}
+          {activeTab === 'audit'    && <AuditTimelineView />}
           {activeTab === 'redteam' && <RedTeamView currentUser={currentUser} />}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#0d1f38] bg-[#030810]/80 py-3 px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] text-[#1e3a5f]">
+      <footer className="py-3 px-6" style={{ borderTop: `1px solid rgba(74,74,74,0.25)`, background: 'rgba(14,17,23,0.8)' }}>
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px]" style={{ color: C.gray3 }}>
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500/50" />
+            <ShieldCheck className="w-3.5 h-3.5" style={{ color: `${C.teal}60` }} />
             <span>Airlock — Zero-Trust Financial AI Safety Gateway</span>
           </div>
           <div className="flex items-center gap-4">
-            <span>MCP Protocol · TypeSafe Jev · SHA-256 Dual-Auth · WAL</span>
-            <span className="text-sky-500/50 font-semibold">PayPal AI Hackathon 2025</span>
+            <span style={{ color: 'rgba(74,74,74,0.7)' }}>MCP · TypeSafe Jev · SHA-256 · WAL</span>
+            <span className="font-black" style={{ color: `${C.primary}80` }}>PayPal AI Hackathon 2025</span>
           </div>
         </div>
       </footer>

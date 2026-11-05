@@ -3,23 +3,42 @@
 import React, { useState } from 'react';
 import {
   Send, CheckCircle2, AlertTriangle, XCircle, Clock,
-  ShieldAlert, Zap, Package, ArrowRight, Loader2, AlertCircle
+  ShieldAlert, Zap, Package, Loader2, AlertCircle
 } from 'lucide-react';
 import type { UserContextValue } from './Header';
+
+// ── Palette ──────────────────────────────────────────────────────────────────
+const C = {
+  primary: '#4A90E2',
+  teal:    '#50E3C2',
+  orange:  '#F5A623',
+  pink:    '#E94E77',
+  violet:  '#9013FE',
+  gold:    '#F8E71C',
+  white:   '#FFFFFF',
+  gray1:   '#D1D1D1',
+  gray2:   '#B7B7B7',
+  gray3:   '#4A4A4A',
+  s0: '#07090f',
+  s1: '#0e1117',
+  s2: '#151b26',
+  s3: '#1c2333',
+  s4: '#232b3e',
+};
 
 interface NewRequestViewProps {
   currentUser: UserContextValue;
   onActionComplete: () => void;
 }
 
-// ── Scenario Presets ───────────────────────────────────────────────────────────
+// ── Presets ───────────────────────────────────────────────────────────────────
 const PRESETS = [
   {
     id: 'clean',
     emoji: '✅',
     label: 'Clean Pass',
     sublabel: '$45 — auto-approved',
-    color: 'emerald',
+    accent: C.teal,
     data: { paymentId: 'CAP-CLEAN-001', amount: '45.00', reason: 'Customer returned unused merchandise within 30-day return policy.' },
   },
   {
@@ -27,7 +46,7 @@ const PRESETS = [
     emoji: '⏳',
     label: 'Needs Approval',
     sublabel: '$120 — escalated',
-    color: 'amber',
+    accent: C.orange,
     data: { paymentId: 'CAP-LARGE-200', amount: '120.00', reason: 'Customer dispute on order quality. Reviewed and partial refund agreed.' },
   },
   {
@@ -35,7 +54,7 @@ const PRESETS = [
     emoji: '🚫',
     label: 'Policy Deny',
     sublabel: 'Exceeds cap $200',
-    color: 'rose',
+    accent: C.pink,
     data: { paymentId: 'CAP-DENY-001', amount: '350.00', reason: 'Full refund requested due to defective product.' },
   },
   {
@@ -43,7 +62,7 @@ const PRESETS = [
     emoji: '☠️',
     label: 'Injection Attack',
     sublabel: 'Adversarial payload',
-    color: 'purple',
+    accent: C.violet,
     data: {
       paymentId: 'CAP-EVIL-999',
       amount: '9999.99',
@@ -54,19 +73,19 @@ const PRESETS = [
     id: 'velocity',
     emoji: '⚡',
     label: 'Velocity Burst',
-    sublabel: 'High frequency check',
-    color: 'sky',
+    sublabel: 'High frequency',
+    accent: C.primary,
     data: { paymentId: 'CAP-VEL-001', amount: '48.00', reason: 'Customer requested refund for subscription cancellation.' },
   },
 ] as const;
 
-// ── Pipeline Stage config ─────────────────────────────────────────────────────
+// ── Pipeline stages ───────────────────────────────────────────────────────────
 const STAGES = [
-  { id: 'intake',    label: 'Intake',    icon: Package,      desc: 'Untrusted input received' },
-  { id: 'policy',   label: 'Policy',    icon: ShieldAlert,  desc: 'Deterministic rule eval' },
-  { id: 'jev',      label: 'TypeSafe',  icon: AlertCircle,  desc: 'Adversarial AI scan' },
-  { id: 'approval', label: 'Auth',      icon: CheckCircle2, desc: 'Dual-auth / SHA-256' },
-  { id: 'execute',  label: 'Execute',   icon: Zap,          desc: 'Provider + WAL commit' },
+  { id: 'intake',    label: 'Intake',   icon: Package,      desc: 'Untrusted input' },
+  { id: 'policy',   label: 'Policy',   icon: ShieldAlert,  desc: 'Rule evaluation' },
+  { id: 'jev',      label: 'TypeSafe', icon: AlertCircle,  desc: 'AI adversarial scan' },
+  { id: 'approval', label: 'Auth',     icon: CheckCircle2, desc: 'Dual-auth / SHA-256' },
+  { id: 'execute',  label: 'Execute',  icon: Zap,          desc: 'WAL + provider' },
 ] as const;
 
 type StageId = typeof STAGES[number]['id'];
@@ -122,7 +141,6 @@ export function NewRequestView({ currentUser, onActionComplete }: NewRequestView
     setEvalResult(null);
     resetPipeline();
     try {
-      // Animate up to policy + jev (dry run doesn't execute)
       const pipelinePromise = animatePipeline(['intake', 'policy', 'jev'], 'running');
       const res = await fetch('/api/evaluate', {
         method: 'POST',
@@ -159,7 +177,6 @@ export function NewRequestView({ currentUser, onActionComplete }: NewRequestView
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Submission failed');
 
-      // Full pipeline animation
       const stages: StageId[] =
         data.disposition === 'ALLOW' ? ['intake', 'policy', 'jev', 'approval', 'execute'] :
         data.disposition === 'DENY' ? ['intake', 'policy', 'jev'] :
@@ -182,12 +199,10 @@ export function NewRequestView({ currentUser, onActionComplete }: NewRequestView
 
   return (
     <div className="space-y-6">
-      {/* Scenario Preset Cards */}
+
+      {/* ── Preset Cards ─────────────────────────────────────────────── */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#1e4d7a]">Quick Scenarios</span>
-          <div className="flex-1 h-px bg-[#0d2340]" />
-        </div>
+        <SectionLabel text="Quick Scenarios" />
         <div className="grid grid-cols-5 gap-3">
           {PRESETS.map(preset => (
             <PresetCard
@@ -200,81 +215,81 @@ export function NewRequestView({ currentUser, onActionComplete }: NewRequestView
         </div>
       </div>
 
-      {/* Pipeline Visualizer */}
+      {/* ── Pipeline Visualizer ───────────────────────────────────────── */}
       <PipelineVisualizer
         activeStage={activeStage}
         completedStages={completedStages}
         status={pipelineStatus}
       />
 
-      {/* Form + Result Grid */}
+      {/* ── Form + Result Grid ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Form Column */}
+
+        {/* Form */}
         <div className="lg:col-span-7 glass-card rounded-xl p-6 hover-neon transition-all">
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-base font-bold text-white">New Refund Proposal</h2>
-          </div>
-          <p className="text-[11px] text-[#1e4d7a] mb-5">
-            Untrusted agent request → deterministic policy → AI adversarial scan → dual-auth → WAL execution
+          <h2 className="text-base font-black text-white mb-0.5">New Refund Proposal</h2>
+          <p className="text-[11px] mb-5" style={{ color: C.gray2 }}>
+            Untrusted agent input → deterministic policy rules → TypeSafe Jev AI scan → dual-auth → WAL execution
           </p>
 
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2 animate-denied">
-              <XCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{error}</span>
+            <div className="mb-4 p-3 rounded-lg flex items-center gap-2 text-xs animate-denied"
+              style={{ background: 'rgba(233,78,119,0.1)', border: '1px solid rgba(233,78,119,0.25)', color: C.pink }}>
+              <XCircle className="w-4 h-4 flex-shrink-0" />{error}
             </div>
           )}
 
           <div className="space-y-4">
             <FormField label="PayPal Capture ID">
               <input
-                type="text"
-                value={paymentId}
-                onChange={(e) => setPaymentId(e.target.value)}
-                className="w-full bg-[#030e1e] border border-[#0d2340] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 transition font-mono"
+                type="text" value={paymentId} onChange={e => setPaymentId(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 text-sm font-mono focus:outline-none transition"
+                style={{ background: C.s0, border: `1px solid ${C.gray3}`, color: C.gray1 }}
+                onFocus={e => { e.target.style.borderColor = C.primary; }}
+                onBlur={e => { e.target.style.borderColor = C.gray3; }}
                 placeholder="CAP-DEFAULT-100"
               />
             </FormField>
 
             <FormField label="Refund Amount (USD)" hint="Auto-approve ≤ $50 · Approval $50–$200 · Deny > $200">
               <div className="relative">
-                <span className="absolute left-3 top-2 text-sm text-[#1e4d7a] font-medium">$</span>
+                <span className="absolute left-3 top-2 text-sm font-semibold" style={{ color: C.gray3 }}>$</span>
                 <input
-                  type="number"
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-[#030e1e] border border-[#0d2340] rounded-lg pl-7 pr-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 transition"
+                  type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)}
+                  className="w-full rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none transition"
+                  style={{ background: C.s0, border: `1px solid ${C.gray3}`, color: C.gray1 }}
+                  onFocus={e => { e.target.style.borderColor = C.primary; }}
+                  onBlur={e => { e.target.style.borderColor = C.gray3; }}
                   placeholder="45.00"
                 />
               </div>
             </FormField>
 
-            <FormField label="Agent Reason (Untrusted Input — TypeSafe scans this)">
+            <FormField label="Agent Reason (TypeSafe Jev scans this for adversarial content)">
               <textarea
-                rows={3}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className="w-full bg-[#030e1e] border border-[#0d2340] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 transition resize-none"
+                rows={3} value={reason} onChange={e => setReason(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none transition resize-none"
+                style={{ background: C.s0, border: `1px solid ${C.gray3}`, color: C.gray1 }}
+                onFocus={e => { e.target.style.borderColor = C.primary; }}
+                onBlur={e => { e.target.style.borderColor = C.gray3; }}
                 placeholder="Provide reason for refund..."
               />
             </FormField>
 
             <div className="pt-1 flex items-center gap-3">
               <button
-                onClick={handleEvaluate}
-                disabled={loading}
-                className="px-4 py-2 rounded-lg bg-[#0a1628] hover:bg-[#0d2240] text-slate-200 text-sm font-medium transition border border-[#0d2340] hover:border-sky-500/30 disabled:opacity-50"
+                onClick={handleEvaluate} disabled={loading}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition"
+                style={{ background: C.s3, border: `1px solid ${C.gray3}`, color: C.gray1 }}
               >
-                {loading ? (
-                  <span className="flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Evaluating...</span>
-                ) : 'Dry Run (Policy Only)'}
+                {loading
+                  ? <span className="flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Evaluating...</span>
+                  : 'Dry Run (Policy Only)'}
               </button>
 
               <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="btn-paypal flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold shadow-lg disabled:opacity-50"
+                onClick={handleSubmit} disabled={loading}
+                className="btn-primary flex items-center gap-2 px-5 py-2 rounded-lg text-sm shadow-lg"
               >
                 <Send className="w-4 h-4" />
                 {loading ? 'Processing...' : 'Submit Action →'}
@@ -283,17 +298,16 @@ export function NewRequestView({ currentUser, onActionComplete }: NewRequestView
           </div>
         </div>
 
-        {/* Result Column */}
+        {/* Result panel */}
         <div className="lg:col-span-5 space-y-4">
           {!evalResult && !submitResult && pipelineStatus === 'idle' && (
-            <div className="glass-card rounded-xl p-8 text-center border border-dashed border-[#0d2340]">
-              <ShieldAlert className="w-10 h-10 text-[#1e3a5f] mx-auto mb-3" />
-              <p className="text-sm text-[#1e4d7a] font-medium">Select a scenario or fill the form</p>
-              <p className="text-xs text-[#1e3a5f] mt-1">Policy evaluation results will appear here</p>
+            <div className="glass-card rounded-xl p-10 text-center border-dashed" style={{ borderColor: 'rgba(74,74,74,0.35)' }}>
+              <ShieldAlert className="w-10 h-10 mx-auto mb-3" style={{ color: 'rgba(74,74,74,0.7)' }} />
+              <p className="text-sm font-bold" style={{ color: C.gray2 }}>Select a scenario or fill the form</p>
+              <p className="text-xs mt-1" style={{ color: C.gray3 }}>Policy evaluation results appear here</p>
             </div>
           )}
-
-          {evalResult && <EvalCard result={evalResult} />}
+          {evalResult  && <EvalCard result={evalResult} />}
           {submitResult && <SubmitCard result={submitResult} />}
         </div>
       </div>
@@ -303,29 +317,20 @@ export function NewRequestView({ currentUser, onActionComplete }: NewRequestView
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-function PresetCard({ preset, active, onClick }: {
-  preset: typeof PRESETS[number];
-  active: boolean;
-  onClick: () => void;
-}) {
-  const colorMap = {
-    emerald: { border: active ? 'border-emerald-500/50' : 'border-[#0d2340]', bg: active ? 'bg-emerald-500/8' : '', glow: active ? '0 0 16px rgba(16,185,129,0.15)' : '' },
-    amber:   { border: active ? 'border-amber-500/50' : 'border-[#0d2340]', bg: active ? 'bg-amber-500/8' : '', glow: active ? '0 0 16px rgba(245,158,11,0.15)' : '' },
-    rose:    { border: active ? 'border-rose-500/50' : 'border-[#0d2340]', bg: active ? 'bg-rose-500/8' : '', glow: active ? '0 0 16px rgba(239,68,68,0.15)' : '' },
-    purple:  { border: active ? 'border-purple-500/50' : 'border-[#0d2340]', bg: active ? 'bg-purple-500/8' : '', glow: active ? '0 0 16px rgba(168,85,247,0.15)' : '' },
-    sky:     { border: active ? 'border-sky-500/50' : 'border-[#0d2340]', bg: active ? 'bg-sky-500/8' : '', glow: active ? '0 0 16px rgba(14,165,233,0.15)' : '' },
-  };
-  const c = colorMap[preset.color];
-
+function PresetCard({ preset, active, onClick }: { preset: typeof PRESETS[number]; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className={`glass-card rounded-xl p-3 text-left transition-all cursor-pointer hover-neon ${c.border} ${c.bg}`}
-      style={{ boxShadow: c.glow }}
+      className="glass-card rounded-xl p-3 text-left transition-all cursor-pointer"
+      style={{
+        border: `1px solid ${active ? preset.accent : 'rgba(74,74,74,0.4)'}`,
+        background: active ? `${preset.accent}10` : undefined,
+        boxShadow: active ? `0 0 16px ${preset.accent}25` : undefined,
+      }}
     >
       <div className="text-xl mb-1.5">{preset.emoji}</div>
       <div className="text-xs font-bold text-white leading-tight">{preset.label}</div>
-      <div className="text-[10px] text-[#1e4d7a] mt-0.5">{preset.sublabel}</div>
+      <div className="text-[10px] mt-0.5" style={{ color: C.gray3 }}>{preset.sublabel}</div>
     </button>
   );
 }
@@ -335,49 +340,50 @@ function PipelineVisualizer({ activeStage, completedStages, status }: {
   completedStages: Set<StageId>;
   status: PipelineStatus;
 }) {
-  const statusColors: Record<PipelineStatus, string> = {
-    idle: 'text-[#1e4d7a]',
-    running: 'text-sky-400',
-    allow: 'text-emerald-400',
-    require_approval: 'text-amber-400',
-    deny: 'text-rose-400',
+  const statusMeta: Record<PipelineStatus, { label: string; color: string }> = {
+    idle:             { label: 'Ready',                    color: C.gray3 },
+    running:          { label: 'Processing…',              color: C.primary },
+    allow:            { label: '✓ AUTO-EXECUTED',          color: C.teal },
+    require_approval: { label: '⏳ QUEUED FOR APPROVAL',   color: C.orange },
+    deny:             { label: '🚫 BLOCKED BY POLICY',     color: C.pink },
   };
-  const statusLabels: Record<PipelineStatus, string> = {
-    idle: 'Ready',
-    running: 'Processing...',
-    allow: '✓ AUTO-EXECUTED',
-    require_approval: '⏳ QUEUED FOR APPROVAL',
-    deny: '🚫 BLOCKED BY POLICY',
-  };
+  const meta = statusMeta[status];
 
   return (
-    <div className="glass-card rounded-xl p-4 border border-[#0d2340]">
+    <div className="glass-card rounded-xl p-4" style={{ border: '1px solid rgba(74,74,74,0.4)' }}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-[#1e4d7a]">
-          5-Stage Safety Pipeline
-        </span>
-        <span className={`text-xs font-bold ${statusColors[status]}`}>
-          {statusLabels[status]}
-        </span>
+        <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: C.gray3 }}>5-Stage Safety Pipeline</span>
+        <span className="text-xs font-black" style={{ color: meta.color }}>{meta.label}</span>
       </div>
-
       <div className="flex items-center">
         {STAGES.map((stage, i) => {
           const isActive = activeStage === stage.id;
-          const isDone = completedStages.has(stage.id);
+          const isDone   = completedStages.has(stage.id);
+          const nextDone = i < STAGES.length - 1 && completedStages.has(STAGES[i + 1].id);
           const Icon = stage.icon;
           return (
             <React.Fragment key={stage.id}>
-              <StageNode
-                label={stage.label}
-                desc={stage.desc}
-                Icon={Icon}
-                isActive={isActive}
-                isDone={isDone}
-                status={status}
-              />
+              {/* Node */}
+              <div className="flex flex-col items-center flex-1 min-w-0">
+                <div
+                  className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center transition-all duration-300 ${isActive ? 'animate-stage-pop' : ''}`}
+                  style={{
+                    borderColor: isActive ? C.primary : isDone ? (status === 'deny' ? C.pink : C.teal) : C.gray3,
+                    background:  isActive ? `${C.primary}18` : isDone ? (status === 'deny' ? `${C.pink}12` : `${C.teal}12`) : C.s1,
+                    color:       isActive ? C.primary : isDone ? (status === 'deny' ? C.pink : C.teal) : C.gray3,
+                    boxShadow:   isActive ? `0 0 16px ${C.primary}50` : isDone && status !== 'deny' ? `0 0 10px ${C.teal}30` : 'none',
+                  }}
+                >
+                  {isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
+                </div>
+                <div className="text-[10px] font-bold text-center mt-1.5" style={{ color: C.gray1 }}>{stage.label}</div>
+                <div className="text-[9px] text-center px-1 leading-tight" style={{ color: C.gray3 }}>{stage.desc}</div>
+              </div>
+              {/* Connector */}
               {i < STAGES.length - 1 && (
-                <div className={`pipeline-connector ${isDone && completedStages.has(STAGES[i + 1].id) ? 'active' : ''}`} />
+                <div
+                  className={`pipeline-connector ${isDone && nextDone ? 'active' : ''}`}
+                />
               )}
             </React.Fragment>
           );
@@ -387,72 +393,35 @@ function PipelineVisualizer({ activeStage, completedStages, status }: {
   );
 }
 
-function StageNode({ label, desc, Icon, isActive, isDone, status }: {
-  label: string;
-  desc: string;
-  Icon: React.FC<any>;
-  isActive: boolean;
-  isDone: boolean;
-  status: PipelineStatus;
-}) {
-  let nodeStyle = 'border-[#0d2340] bg-[#030e1e] text-[#1e4d7a]';
-  let glow = '';
-
-  if (isActive) {
-    nodeStyle = 'border-sky-500 bg-sky-500/10 text-sky-400';
-    glow = '0 0 16px rgba(14,165,233,0.4)';
-  } else if (isDone) {
-    if (status === 'deny') {
-      nodeStyle = 'border-rose-500/50 bg-rose-500/10 text-rose-400';
-    } else {
-      nodeStyle = 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400';
-    }
-  }
-
-  return (
-    <div className="flex flex-col items-center flex-1 min-w-0">
-      <div
-        className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center transition-all duration-300 ${nodeStyle} ${isActive ? 'animate-stage-pop' : ''}`}
-        style={{ boxShadow: glow }}
-      >
-        {isActive ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Icon className="w-4 h-4" />
-        )}
-      </div>
-      <div className="text-[10px] font-bold text-center mt-1.5 text-slate-300">{label}</div>
-      <div className="text-[9px] text-[#1e4070] text-center leading-tight px-1">{desc}</div>
-    </div>
-  );
-}
-
 function EvalCard({ result }: { result: any }) {
   return (
-    <div className="glass-card rounded-xl p-5 border border-[#0d2340] hover-neon transition-all animate-count-up">
+    <div className="glass-card rounded-xl p-5 hover-neon transition-all animate-count-up" style={{ border: '1px solid rgba(74,74,74,0.4)' }}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-bold uppercase tracking-widest text-[#1e4d7a]">Policy Evaluation</h3>
+        <h3 className="text-[11px] font-bold uppercase tracking-widest" style={{ color: C.gray3 }}>Policy Evaluation</h3>
         <DispositionBadge disposition={result.disposition} />
       </div>
       <div className="space-y-3">
         <InfoBlock label="Triggered Rules">
           {result.ruleIds.length === 0 ? (
-            <span className="text-emerald-400 font-semibold text-xs">None — Clean Pass</span>
+            <span className="text-xs font-bold" style={{ color: C.teal }}>None — Clean Pass</span>
           ) : (
             <div className="flex flex-wrap gap-1 mt-1">
               {result.ruleIds.map((r: string) => (
-                <span key={r} className="px-2 py-0.5 rounded bg-[#0a1628] border border-[#0d2340] text-sky-300 font-mono text-[11px]">{r}</span>
+                <span key={r} className="font-mono text-[11px] px-2 py-0.5 rounded"
+                  style={{ background: C.s3, border: `1px solid ${C.gray3}`, color: C.primary }}>
+                  {r}
+                </span>
               ))}
             </div>
           )}
         </InfoBlock>
         <InfoBlock label="Reason">
-          <p className="text-slate-300 text-xs mt-1">{result.reasons.join('; ')}</p>
+          <p className="text-xs mt-1" style={{ color: C.gray1 }}>{result.reasons.join('; ')}</p>
         </InfoBlock>
         {result.facts && (
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#0d2340] text-[11px]">
-            <div className="text-[#1e4d7a]">Capture: <span className="text-slate-300">{result.facts.payment_capture_status}</span></div>
-            <div className="text-[#1e4d7a]">Remaining: <span className="text-slate-300">${(result.facts.remaining_refundable_amount.amount_minor / 100).toFixed(2)}</span></div>
+          <div className="grid grid-cols-2 gap-2 pt-2 text-[11px]" style={{ borderTop: `1px solid rgba(74,74,74,0.3)` }}>
+            <div style={{ color: C.gray3 }}>Capture: <span style={{ color: C.gray1 }}>{result.facts.payment_capture_status}</span></div>
+            <div style={{ color: C.gray3 }}>Remaining: <span style={{ color: C.gray1 }}>${(result.facts.remaining_refundable_amount.amount_minor / 100).toFixed(2)}</span></div>
           </div>
         )}
       </div>
@@ -462,44 +431,47 @@ function EvalCard({ result }: { result: any }) {
 
 function SubmitCard({ result }: { result: any }) {
   if (result.disposition === 'ALLOW') return (
-    <div className="glass-card rounded-xl p-5 border border-emerald-500/30 bg-emerald-500/5 animate-count-up">
+    <div className="glass-card rounded-xl p-5 animate-count-up"
+      style={{ border: `1px solid ${C.teal}30`, background: `${C.teal}08` }}>
       <div className="flex items-center gap-2 mb-2">
-        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-        <span className="font-bold text-emerald-400">Executed & Verified</span>
+        <CheckCircle2 className="w-5 h-5" style={{ color: C.teal }} />
+        <span className="font-black" style={{ color: C.teal }}>Executed & Verified</span>
       </div>
-      <p className="text-xs text-slate-300">
-        Operation <code className="text-emerald-300 font-mono">{result.operation?.operation_id?.slice(0, 12)}...</code> committed to WAL and executed on provider.
+      <p className="text-xs" style={{ color: C.gray1 }}>
+        Operation <code className="font-mono" style={{ color: C.teal }}>{result.operation?.operation_id?.slice(0, 12)}...</code> committed to WAL and executed on provider.
       </p>
-      <div className="mt-3 p-2 rounded bg-[#030e1e] border border-emerald-500/20">
-        <p className="text-[11px] text-emerald-500 font-mono">STATUS: COMPLETED ✓</p>
+      <div className="mt-3 p-2 rounded terminal">
+        <p className="font-mono" style={{ color: C.teal, fontSize: 11 }}>STATUS: COMPLETED ✓</p>
       </div>
     </div>
   );
 
   if (result.disposition === 'REQUIRE_APPROVAL') return (
-    <div className="glass-card rounded-xl p-5 border border-amber-500/30 bg-amber-500/5 animate-count-up">
+    <div className="glass-card rounded-xl p-5 animate-count-up"
+      style={{ border: `1px solid ${C.orange}30`, background: `${C.orange}08` }}>
       <div className="flex items-center gap-2 mb-2">
-        <Clock className="w-5 h-5 text-amber-400" />
-        <span className="font-bold text-amber-400">Queued for Human Approval</span>
+        <Clock className="w-5 h-5" style={{ color: C.orange }} />
+        <span className="font-black" style={{ color: C.orange }}>Queued for Human Approval</span>
       </div>
-      <p className="text-xs text-slate-300">
-        Amount exceeds $50 auto-threshold. SHA-256 action hash bound. Switch to <strong>Manager Dave</strong> in Approval Queue tab to approve.
+      <p className="text-xs" style={{ color: C.gray1 }}>
+        Amount exceeds $50 auto-threshold. SHA-256 action hash bound. Switch to <strong>Manager Dave</strong> in Approval Queue tab.
       </p>
-      <div className="mt-3 p-2 rounded bg-[#030e1e] border border-amber-500/20">
-        <p className="text-[11px] text-amber-500 font-mono">STATUS: AWAITING_APPROVAL</p>
+      <div className="mt-3 p-2 rounded terminal">
+        <p className="font-mono" style={{ color: C.orange, fontSize: 11 }}>STATUS: AWAITING_APPROVAL</p>
       </div>
     </div>
   );
 
   return (
-    <div className="glass-card rounded-xl p-5 border border-rose-500/30 bg-rose-500/5 animate-denied animate-count-up">
+    <div className="glass-card rounded-xl p-5 animate-denied animate-count-up"
+      style={{ border: `1px solid ${C.pink}30`, background: `${C.pink}08` }}>
       <div className="flex items-center gap-2 mb-2">
-        <ShieldAlert className="w-5 h-5 text-rose-400" />
-        <span className="font-bold text-rose-400">Denied by Airlock Policy</span>
+        <ShieldAlert className="w-5 h-5" style={{ color: C.pink }} />
+        <span className="font-black" style={{ color: C.pink }}>Denied by Airlock Policy</span>
       </div>
-      <p className="text-xs text-slate-300">{result.reasons?.join('; ')}</p>
-      <div className="mt-3 p-2 rounded bg-[#030e1e] border border-rose-500/20">
-        <p className="text-[11px] text-rose-500 font-mono">STATUS: DENIED — ZERO EXECUTION</p>
+      <p className="text-xs" style={{ color: C.gray1 }}>{result.reasons?.join('; ')}</p>
+      <div className="mt-3 p-2 rounded terminal">
+        <p className="font-mono" style={{ color: C.pink, fontSize: 11 }}>STATUS: DENIED — ZERO EXECUTION</p>
       </div>
     </div>
   );
@@ -509,8 +481,8 @@ function FormField({ label, hint, children }: { label: string; hint?: string; ch
   return (
     <div>
       <div className="flex justify-between items-center mb-1.5">
-        <label className="text-xs font-semibold text-slate-300">{label}</label>
-        {hint && <span className="text-[10px] text-[#1e4070]">{hint}</span>}
+        <label className="text-xs font-bold" style={{ color: C.gray1 }}>{label}</label>
+        {hint && <span className="text-[10px]" style={{ color: C.gray3 }}>{hint}</span>}
       </div>
       {children}
     </div>
@@ -519,31 +491,40 @@ function FormField({ label, hint, children }: { label: string; hint?: string; ch
 
 function InfoBlock({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="bg-[#030e1e] p-3 rounded-lg border border-[#0d2340]">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-[#1e4070]">{label}</span>
+    <div className="p-3 rounded-lg" style={{ background: C.s0, border: `1px solid rgba(74,74,74,0.35)` }}>
+      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.gray3 }}>{label}</span>
       <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function SectionLabel({ text }: { text: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: C.gray3 }}>{text}</span>
+      <div className="flex-1 h-px" style={{ background: `rgba(74,74,74,0.35)` }} />
     </div>
   );
 }
 
 export function DispositionBadge({ disposition }: { disposition: string }) {
   if (disposition === 'ALLOW') return (
-    <span className="badge-allow inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold">
+    <span className="badge-allow inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-black">
       <CheckCircle2 className="w-3.5 h-3.5" /> ALLOW
     </span>
   );
   if (disposition === 'REQUIRE_APPROVAL') return (
-    <span className="badge-require inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold">
+    <span className="badge-require inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-black">
       <Clock className="w-3.5 h-3.5" /> REQUIRE APPROVAL
     </span>
   );
   if (disposition === 'PAUSE_REVIEW') return (
-    <span className="badge-pause inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold">
+    <span className="badge-pause inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-black">
       <AlertTriangle className="w-3.5 h-3.5" /> PAUSE REVIEW
     </span>
   );
   return (
-    <span className="badge-deny inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold">
+    <span className="badge-deny inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-black">
       <XCircle className="w-3.5 h-3.5" /> DENY
     </span>
   );
