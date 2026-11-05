@@ -119,6 +119,8 @@ export function createAirlockMcpServer(options: AirlockMcpServerOptions) {
   return {
     server,
     tools,
+    approvalService,
+    executionService,
     startStdio: async () => {
       const transport = new StdioServerTransport();
       await server.connect(transport);

@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "start": "node ./dist/cli.js"
   },
   "dependencies": {
     "@airlock/contracts": "*",
