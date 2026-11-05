@@ -3,8 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --background: #0f172a;
-  --foreground: #f8fafc;
+  --background: #060b14;
+  --foreground: #f0f4f8;
+  --paypal-blue: #003087;
+  --paypal-sky: #009cde;
+  --paypal-gold: #ffc439;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -14,3 +25,154 @@ body {
   min-height: 100vh;
 }
 
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d1626;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e3a5f;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #009cde;
+}
+
+/* Animated gradient shimmer for metric cards */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 156, 222, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(0, 156, 222, 0.5); }
+}
+
+@keyframes stage-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ticker-scroll {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes denied-flash {
+  0% { background: rgba(239, 68, 68, 0); }
+  30% { background: rgba(239, 68, 68, 0.15); }
+  100% { background: rgba(239, 68, 68, 0); }
+}
+
+.animate-stage-pop { animation: stage-pop 0.35s ease-out; }
+.animate-ticker { animation: ticker-scroll 0.3s ease-out; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-denied { animation: denied-flash 0.6s ease-out; }
+.animate-count-up { animation: count-up 0.4s ease-out; }
+
+/* Pipeline connector line */
+.pipeline-connector {
+  width: 32px;
+  height: 2px;
+  background: linear-gradient(90deg, #1e3a5f, #009cde44);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pipeline-connector.active {
+  background: linear-gradient(90deg, #009cde, #00c2ff);
+  box-shadow: 0 0 8px rgba(0, 156, 222, 0.6);
+}
+
+/* Code terminal style */
+.terminal {
+  background: #030810;
+  border: 1px solid #0d2340;
+  border-radius: 8px;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* PayPal gradient button */
+.btn-paypal {
+  background: linear-gradient(135deg, #003087 0%, #009cde 100%);
+  color: white;
+  border: none;
+  transition: all 0.2s ease;
+}
+.btn-paypal:hover {
+  background: linear-gradient(135deg, #004099 0%, #00aef5 100%);
+  box-shadow: 0 4px 16px rgba(0, 156, 222, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Gold accent */
+.text-paypal-gold { color: #ffc439; }
+.border-paypal-gold { border-color: #ffc43940; }
+.bg-paypal-gold { background: #ffc439; }
+
+/* Metric ticker number */
+.metric-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Glass card */
+.glass-card {
+  background: rgba(13, 25, 48, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 58, 95, 0.6);
+}
+
+/* Neon border on hover */
+.hover-neon:hover {
+  border-color: rgba(0, 156, 222, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(0, 156, 222, 0.2);
+}
+
+/* Selection badge states */
+.badge-allow {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.badge-require {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.badge-deny {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+.badge-pause {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
