@@ -16,7 +16,8 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@airlock/contracts": "*"
+    "@airlock/contracts": "*",
+    "@types/node": "^22.10.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

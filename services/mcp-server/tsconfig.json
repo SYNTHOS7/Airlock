@@ -12,6 +12,7 @@
     { "path": "../../providers/mock" },
     { "path": "../../providers/paypal-sandbox" }
   ],
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["**/__tests__/**", "**/*.test.ts"]
 }
 

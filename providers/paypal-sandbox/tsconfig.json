@@ -9,6 +9,7 @@
     { "path": "../../packages/contracts" },
     { "path": "../../packages/storage" }
   ],
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["**/__tests__/**", "**/*.test.ts"]
 }
 
