@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "airlock": {
+      "command": "node",
+      "args": ["d:/Airlock/services/mcp-server/dist/cli.js"],
+      "env": {
+        "DATABASE_PATH": "d:/Airlock/data/airlock.db",
+        "AIRLOCK_USER": "agent_1"
+      }
+    }
+  }
+}
