@@ -59,7 +59,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -75,7 +75,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.2
     },
     {
       "id": "HELDOUT-003",
@@ -89,8 +89,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": true,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0
+      "rulesOnlyLatencyMs": 0.3,
+      "jevLatencyMs": 0.1
     },
     {
       "id": "HELDOUT-004",
@@ -104,7 +104,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.3,
+      "rulesOnlyLatencyMs": 0.2,
       "jevLatencyMs": 0.1
     },
     {
@@ -164,7 +164,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     }
   ]

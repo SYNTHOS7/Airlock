@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header, type UserContextValue, USERS } from '@/components/Header';
+import { AgenticCommerceView } from '@/components/AgenticCommerceView';
 import { NewRequestView } from '@/components/NewRequestView';
 import { ApprovalQueueView } from '@/components/ApprovalQueueView';
 import { AuditTimelineView } from '@/components/AuditTimelineView';
 import { RedTeamView } from '@/components/RedTeamView';
 import { PolicyStudioView, type PolicyStudioSettings } from '@/components/PolicyStudioView';
-import { PlusCircle, Clock, History, Bug, SlidersHorizontal, ShieldCheck } from 'lucide-react';
+import { Bot, PlusCircle, Clock, History, Bug, SlidersHorizontal, ShieldCheck } from 'lucide-react';
 
 const C = {
   primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77',
@@ -15,20 +16,21 @@ const C = {
   gray2: '#B7B7B7', gray3: '#4A4A4A', s0: '#07090f', s1: '#0e1117', s3: '#1c2333',
 };
 
-type TabId = 'request' | 'queue' | 'audit' | 'redteam' | 'studio';
+type TabId = 'agentic' | 'request' | 'queue' | 'audit' | 'redteam' | 'studio';
 interface Metrics { protected: number; blocked: number; latencyMs: number; capitalProtectedUsd?: number; }
 
-const TABS: { id: TabId; label: string; Icon: React.FC<any>; color: string; badge?: true; isNew?: true }[] = [
-  { id: 'request', label: 'New Request',    Icon: PlusCircle,        color: C.teal    },
-  { id: 'queue',   label: 'Approval Queue', Icon: Clock,             color: C.orange, badge: true },
-  { id: 'audit',   label: 'Audit Timeline', Icon: History,           color: C.primary },
-  { id: 'redteam', label: 'Red-Team Lab',   Icon: Bug,               color: C.pink,   isNew: true },
-  { id: 'studio',  label: 'Policy Studio',  Icon: SlidersHorizontal, color: C.gold,   isNew: true },
+const TABS: { id: TabId; label: string; Icon: React.FC<any>; color: string; badge?: true; isNew?: string }[] = [
+  { id: 'agentic', label: 'Agentic Commerce', Icon: Bot,               color: C.teal,    isNew: 'AI WHEEL' },
+  { id: 'request', label: 'New Request',      Icon: PlusCircle,        color: C.primary },
+  { id: 'queue',   label: 'Approval Queue',   Icon: Clock,             color: C.orange,  badge: true },
+  { id: 'audit',   label: 'Audit Timeline',   Icon: History,           color: C.primary },
+  { id: 'redteam', label: 'Red-Team Lab',     Icon: Bug,               color: C.pink,    isNew: 'DEFENSE' },
+  { id: 'studio',  label: 'Policy Studio',    Icon: SlidersHorizontal, color: C.gold,    isNew: 'STUDIO' },
 ];
 
 export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<UserContextValue>(USERS[0]);
-  const [activeTab,   setActiveTab]   = useState<TabId>('request');
+  const [activeTab,   setActiveTab]   = useState<TabId>('agentic');
   const [pendingCount, setPendingCount] = useState(0);
   const [metrics, setMetrics] = useState<Metrics>({ protected: 0, blocked: 0, latencyMs: 0 });
   const [policySettings, setPolicySettings] = useState<PolicyStudioSettings>({
@@ -106,9 +108,9 @@ export default function DashboardPage() {
                   </span>
                 )}
                 {tab.isNew && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-black"
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-black tracking-wide"
                     style={{ background: `${tab.color}20`, border: `1px solid ${tab.color}40`, color: tab.color }}>
-                    NEW
+                    {tab.isNew}
                   </span>
                 )}
               </button>
@@ -116,8 +118,14 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* View */}
+        {/* View Routing */}
         <div>
+          {activeTab === 'agentic' && (
+            <AgenticCommerceView
+              currentUser={currentUser}
+              onActionComplete={updatePendingCount}
+            />
+          )}
           {activeTab === 'request' && (
             <NewRequestView
               currentUser={currentUser}
@@ -150,7 +158,7 @@ export default function DashboardPage() {
             <span>Airlock — Zero-Trust Financial AI Safety Gateway</span>
           </div>
           <div className="flex items-center gap-4">
-            <span style={{ color: 'rgba(74,74,74,0.7)' }}>MCP · TypeSafe Jev · SHA-256 · WAL</span>
+            <span style={{ color: 'rgba(74,74,74,0.7)' }}>MCP · TypeSafe Jev · Three.js 3D Vault · SHA-256 · WAL</span>
             <span className="font-black" style={{ color: `${C.primary}80` }}>PayPal AI Hackathon 2025</span>
           </div>
         </div>
