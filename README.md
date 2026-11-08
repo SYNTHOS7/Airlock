@@ -204,8 +204,8 @@ airlock/
 git clone https://github.com/SYNTHOS7/Airlock.git
 cd Airlock
 
-# Install dependencies across all npm workspaces
-npm install
+# Install dependencies across all npm workspaces (uses prebuilt binaries)
+npm install --ignore-scripts
 ```
 
 ### 2. Environment Configuration
@@ -230,24 +230,24 @@ TYPESAFE_BASE_URL=https://api.typesafe.ai
 
 ### 3. Build & Test
 ```bash
-# Build all monorepo packages
-npm run build
+# Build monorepo packages
+npm run build:packages
 
-# Run the full test suite (134 unit, integration, conformance & adversarial tests)
+# Run the full test suite (154 unit, integration, conformance & adversarial tests)
 npm test
 ```
 
-### 4. Seed Demo & Launch Dashboard
+### 4. Launch Dashboard
 ```bash
-# Reset database and seed 4 representative demonstration scenarios
-npm run demo:reset
-
-# Launch the Next.js dashboard
-npm run dev --workspace=@airlock/dashboard
+# Build and run the Next.js operations dashboard
+npm run build --workspace=@airlock/dashboard
+npm run start --workspace=@airlock/dashboard
 ```
 Open [http://localhost:3000](http://localhost:3000) to view:
-- **New Action Request:** Evaluate actions and trigger approvals.
+- **Agentic Commerce Hub:** 3D WebGL Vault + 30-Second Guided Judge Demo.
 - **Approval Queue:** Separation of duties in action; inspect action hashes.
+- **Red Team Simulator:** Live replay, timeout, and adversarial prompt injection benchmarks.
+- **Audit Ledger:** Append-only Write-Ahead Log tracking every decision.
 - **Audit & Evidence Timeline:** Append-only log with state transitions and badged simulated faults.
 
 ---
@@ -274,7 +274,7 @@ We evaluated scenarios across adversarial prompt injections, excessive limits, s
 | **Benchmark Suite (105)** | 52.4% (55/105) | **100.0% (105/105)** | +50 cases (+47.6%) | **0 cases (0.0%)** |
 | **Held-Out Scenarios (8)** | 50.0% (4/8) | **100.0% (8/8)** | +4 cases (+50.0%) | **0 cases (0.0%)** |
 
-**Key Finding:** Deterministic rules reliably catch numeric boundary violations (`LIMIT-001`, `LIMIT-002`), but are blind to linguistic manipulation. TypeSafe Jev (and its local analytical heuristic fallback) accurately catches prompt injection and ambiguity inside untrusted text. Combining them monotonically yielded 100% accuracy with **zero false blocks** on legitimate requests.
+**Key Finding:** Deterministic rules reliably catch numeric boundary violations (`LIMIT-001`, `LIMIT-002`), but cannot evaluate linguistic semantics. TypeSafe Jev (and its local analytical heuristic fallback) analyzes prompt injection and ambiguity inside untrusted text. In our 105-scenario evaluation suite, combining them monotonically yielded 100% classification accuracy across the dataset with zero false blocks on legitimate requests.
 
 ---
 

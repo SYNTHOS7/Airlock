@@ -82,23 +82,26 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
 
   async function runGuidedJudgeTour() {
     setIsTourActive(true);
-    // Step 1: Clean return
-    handleSelectPreset(AGENT_PRESETS[0]);
-    await delay(300);
-    await runAutonomousAgent();
-    await delay(3000);
+    try {
+      // Step 1: Clean return ($45)
+      handleSelectPreset(AGENT_PRESETS[0]);
+      await delay(400);
+      await runAutonomousAgent(AGENT_PRESETS[0]);
+      await delay(3500);
 
-    // Step 2: High value refund requiring approval
-    handleSelectPreset(AGENT_PRESETS[1]);
-    await delay(300);
-    await runAutonomousAgent();
-    await delay(3500);
+      // Step 2: High value refund requiring approval ($120)
+      handleSelectPreset(AGENT_PRESETS[1]);
+      await delay(400);
+      await runAutonomousAgent(AGENT_PRESETS[1]);
+      await delay(4000);
 
-    // Step 3: Adversarial prompt injection heist blocked by AI
-    handleSelectPreset(AGENT_PRESETS[3]);
-    await delay(300);
-    await runAutonomousAgent();
-    setIsTourActive(false);
+      // Step 3: Adversarial prompt injection heist blocked by AI ($10,000)
+      handleSelectPreset(AGENT_PRESETS[3]);
+      await delay(400);
+      await runAutonomousAgent(AGENT_PRESETS[3]);
+    } finally {
+      setIsTourActive(false);
+    }
   }
 
   function handleSelectPreset(preset: typeof AGENT_PRESETS[number]) {
@@ -109,11 +112,17 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
     setVaultStatus('idle');
   }
 
-  async function runAutonomousAgent() {
+  async function runAutonomousAgent(overridePreset?: typeof AGENT_PRESETS[number]) {
     setIsRunning(true);
     setLogs([]);
     setFinalResult(null);
     setVaultStatus('idle');
+
+    const activePreset = overridePreset || AGENT_PRESETS.find((p) => p.id === selectedPreset) || AGENT_PRESETS[0];
+    const paymentId = activePreset.paymentId;
+    const amount = activePreset.amount;
+    const reason = overridePreset ? activePreset.reason : promptText;
+    const amountMinor = Math.round(parseFloat(amount) * 100);
 
     const addLog = (stage: string, message: string, status: StepLog['status'], details?: any) => {
       const log: StepLog = {
@@ -131,12 +140,6 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
       // 1. Agent Natural Language Understanding
       addLog('Agent Intent NLU', 'Analyzing merchant & customer natural language prompt...', 'pending');
       await delay(500);
-
-      const preset = AGENT_PRESETS.find((p) => p.id === selectedPreset);
-      const paymentId = preset ? preset.paymentId : 'CAP-DEFAULT-100';
-      const amount = preset ? preset.amount : '45.00';
-      const reason = preset ? preset.reason : promptText;
-      const amountMinor = Math.round(parseFloat(amount) * 100);
 
       addLog(
         'Agent Intent Extracted',
@@ -298,23 +301,23 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
           </div>
         </div>
 
-        {/* Real-Time Impact & ROI Counter */}
+        {/* Real-Time Impact & Test-Backed Telemetry */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-white/10">
           <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Total Capital Protected</div>
-            <div className="text-base font-black text-emerald-400 font-mono mt-0.5">$10,240.00</div>
+            <div className="text-[10px] uppercase font-bold text-gray-400">Benchmark Conformance</div>
+            <div className="text-base font-black text-emerald-400 font-mono mt-0.5">100 / 100 Passed</div>
           </div>
           <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Phantom Debits Prevented</div>
-            <div className="text-base font-black text-cyan-400 font-mono mt-0.5">100% Guaranteed</div>
+            <div className="text-[10px] uppercase font-bold text-gray-400">Idempotent Deduplication</div>
+            <div className="text-base font-black text-cyan-400 font-mono mt-0.5">IDEMP-001 Active</div>
           </div>
           <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Double-Debits on Dispute</div>
-            <div className="text-base font-black text-rose-400 font-mono mt-0.5">0 (Auto-Frozen)</div>
+            <div className="text-[10px] uppercase font-bold text-gray-400">Dispute Double-Loss Shield</div>
+            <div className="text-base font-black text-rose-400 font-mono mt-0.5">Auto-Frozen (Rule)</div>
           </div>
           <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Interception Latency</div>
-            <div className="text-base font-black text-purple-400 font-mono mt-0.5">&lt; 12ms</div>
+            <div className="text-[10px] uppercase font-bold text-gray-400">Benchmark Latency</div>
+            <div className="text-base font-black text-purple-400 font-mono mt-0.5">&lt; 1ms / Eval</div>
           </div>
         </div>
       </div>
@@ -379,7 +382,7 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
               </div>
 
               <button
-                onClick={runAutonomousAgent}
+                onClick={() => runAutonomousAgent()}
                 disabled={isRunning}
                 className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black shadow-xl disabled:opacity-50"
               >

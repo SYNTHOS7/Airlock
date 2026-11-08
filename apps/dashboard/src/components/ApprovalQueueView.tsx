@@ -220,7 +220,7 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold glass-card hover-neon transition"
                     style={{ border: `1px solid rgba(74,74,74,0.4)`, color: C.primary }}
                   >
-                    <Smartphone className="w-3.5 h-3.5" /> Mobile Simulator
+                    <Smartphone className="w-3.5 h-3.5" /> Mobile Push (Simulated)
                   </button>
 
                   <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
                 </div>
                 <div>
                   <div className="text-[11px] font-bold text-white leading-tight">PayPal Airlock Alert</div>
-                  <div className="text-[9px]" style={{ color: C.gray3 }}>Dual-Authorization Push</div>
+                  <div className="text-[9px] text-amber-400 font-mono">Dual-Authorization Push (Simulated)</div>
                 </div>
               </div>
               <button
