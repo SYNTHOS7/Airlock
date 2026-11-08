@@ -226,5 +226,40 @@ export class MockProviderAdapter implements ProviderAdapter {
       (r) => (r.raw_response as any)?.capture_id === captureId
     );
   }
+
+  public async getDispute(transactionId: string): Promise<any | null> {
+    const capture = this.captures.get(transactionId);
+    if (capture?.status === 'DISPUTED') {
+      return {
+        dispute_id: `DISP-MOCK-${randomUUID().slice(0, 8)}`,
+        status: 'UNDER_REVIEW',
+        dispute_amount: capture.original_amount,
+        reason: 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED',
+      };
+    }
+    return null;
+  }
+
+  public async payout(cmd: any): Promise<any> {
+    return {
+      payout_batch_id: `PAYOUT-MOCK-${randomUUID().slice(0, 8)}`,
+      status: 'SUCCESS',
+      amount: cmd.amount,
+      raw_response: { batch_status: 'SUCCESS', recipient: cmd.recipient_email },
+    };
+  }
+
+  public async createInvoice(cmd: any): Promise<any> {
+    return {
+      invoice_id: `INV-MOCK-${randomUUID().slice(0, 8)}`,
+      status: 'SENT',
+      amount: cmd.amount,
+      raw_response: { id: `INV-MOCK-${randomUUID().slice(0, 8)}`, recipient: cmd.recipient_email },
+    };
+  }
+
+  public async verifyWebhookSignature(_params: any): Promise<boolean> {
+    return true;
+  }
 }
 

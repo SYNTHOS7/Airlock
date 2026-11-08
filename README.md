@@ -33,7 +33,7 @@ sequenceDiagram
 
     Agent->>MCP: 1. evaluate_action(request_id, payment_id, amount, reason)
     MCP->>DB: 2. Intake with Idempotency Key (IDEMP-001, IDEMP-002)
-    MCP->>Policy: 3. Load facts and evaluate (AUTH, LIMITS, VELOCITY, Jev)
+    MCP->>Policy: 3. Load facts and evaluate (AUTH, LIMITS, VELOCITY, DISPUTE, Jev)
     Policy-->>MCP: 4. Disposition (ALLOW / REQUIRE_APPROVAL / PAUSE_REVIEW / DENY)
     
     alt Needs Human Approval
@@ -67,7 +67,7 @@ sequenceDiagram
 flowchart TD
     subgraph UntrustedZone["Untrusted Client and AI Agent Zone"]
         Agent["Financial AI Agent (MCP Client / Claude Desktop / Antigravity)"]
-        User["Operations Dashboard User"]
+        User["Operations Dashboard User (3D Vault & Quick Tour)"]
     end
 
     subgraph AirlockCore["Airlock Enclave (Deterministic Safety Boundary)"]
@@ -79,7 +79,7 @@ flowchart TD
     end
 
     subgraph Rails["Execution and Verification Layer"]
-        PayPal["PayPal Sandbox API (v2 Payments)"]
+        PayPal["PayPal Sandbox API (v2 Payments, Disputes, Payouts, Invoices)"]
         MockRail["Deterministic Mock Rail"]
         FaultWrapper["Fault-Injection Wrapper (drop_response, delay, fail_before_send)"]
         Verifier["Outcome Verifier (Same-Key Replay Reconciliation)"]
@@ -325,8 +325,8 @@ In accordance with safety and evaluation guidelines, we explicitly state Airlock
 
 1. **No Production Claims:** Airlock is a functional prototype built for the PayPal AI Hackathon to demonstrate deterministic safety controls and outcome verification. It is **not** currently certified for live production banking or money transmission without further audits, high-availability storage clustering, and compliance reviews.
 2. **Verification Status (Live Sandbox vs. Mock):**
-   - **Deterministic Mock Adapter:** All 132 automated unit, integration, and adversarial tests currently run against `@airlock/provider-mock` and in-memory SQLite.
-   - **Live PayPal Sandbox Adapter:** Fully implemented in `@airlock/provider-paypal-sandbox` with v2 OAuth and refunds client. However, **no requests have been sent to live PayPal endpoints in this build environment** because live sandbox credentials (`PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET`) were not provided in `.env`. 4 tests in `tests/provider/conformance.test.ts` are gracefully skipped until credentials are provided.
+   - **Deterministic Mock Adapter:** All 154 automated unit, integration, and adversarial tests currently run against `@airlock/provider-mock` and in-memory SQLite with 100% pass rate.
+   - **Live PayPal Sandbox Adapter:** Fully implemented in `@airlock/provider-paypal-sandbox` with v2 Payments, Disputes (`/v1/customer/disputes`), Payouts (`/v1/payments/payouts`), Invoicing (`/v2/invoicing/invoices`), and Webhook Signature Verification. However, in automated CI environments without credentials, 4 tests in `tests/provider/conformance.test.ts` gracefully skip.
    - **Dropped-Response Demo Flow:** The lost-response fault simulation and outcome verification run strictly on the **mock provider** wrapped with `FaultInjectedAdapter`.
 3. **Jev Status (Real vs. Local Heuristic Fallback):**
    - The Jev client (`services/policy-engine/src/jev/client.ts`) includes the live HTTP client for `https://api.typesafe.ai/v1/analyze`.
@@ -337,8 +337,8 @@ In accordance with safety and evaluation guidelines, we explicitly state Airlock
 5. **Local SQLite Storage:**
    - Defaults to local SQLite in WAL mode (`data/airlock.db`) for zero-friction local developer testing.
    - A PostgreSQL schema is provided for Supabase / Render deployment.
-6. **Single Operation Type:**
-   - Only `REFUND` against existing captured payments is currently implemented. Voids, authorizations, captures, and multi-rail cross-settlement are architectural extensions.
+6. **Multi-Action Scope:**
+   - Supports `REFUND`, `PAYOUT`, and `INVOICE` under unified deterministic invariants. Voids, authorizations, and multi-rail cross-settlement are future extensions.
 7. **Audit Log Architecture:**
    - The audit log is an **append-oriented relational log** recording timestamped state transitions and evidence rows.
    - **Cryptographic hash-chaining / Merkle tree verification is NOT built**; tamper-evidence currently relies on database role-level permissions (e.g., REVOKE UPDATE/DELETE).

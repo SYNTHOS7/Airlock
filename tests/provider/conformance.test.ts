@@ -251,6 +251,56 @@ describe('Day 5: Provider Conformance Suite & Outcome Verification', () => {
         new PayPalSandboxAdapter({ baseUrl: 'https://api-m.sandbox.paypal.com' });
       }).not.toThrow();
     });
+
+    it('handles active dispute inquiry for disputed captures', async () => {
+      mockAdapter.seedCapture('CAP-DISPUTE-TEST', createMoney(150.0, 'USD'), 'DISPUTED');
+      const dispute = await mockAdapter.getDispute?.('CAP-DISPUTE-TEST');
+      expect(dispute).not.toBeNull();
+      expect(dispute?.status).toBe('UNDER_REVIEW');
+      expect(dispute?.dispute_amount?.amount_minor).toBe(15000);
+    });
+
+    it('returns null dispute for clean non-disputed captures', async () => {
+      const dispute = await mockAdapter.getDispute?.('CAP-CONF-100');
+      expect(dispute).toBeNull();
+    });
+
+    it('processes autonomous merchant payouts under idempotent keys', async () => {
+      const payoutRes = await mockAdapter.payout?.({
+        operation_id: 'op_payout_01',
+        provider_idempotency_key: 'idemp_payout_01',
+        recipient_email: 'vendor@supplier.com',
+        amount: createMoney(75.0, 'USD'),
+        note: 'Supplier restocking payout',
+      });
+      expect(payoutRes?.status).toBe('SUCCESS');
+      expect(payoutRes?.payout_batch_id).toContain('PAYOUT-MOCK-');
+    });
+
+    it('generates commercial invoices for agent-assisted billing', async () => {
+      const invRes = await mockAdapter.createInvoice?.({
+        operation_id: 'op_inv_01',
+        recipient_email: 'buyer@enterprise.com',
+        amount: createMoney(250.0, 'USD'),
+        invoice_number: 'INV-2026-001',
+        description: 'Autonomous Consulting Services',
+      });
+      expect(invRes?.status).toBe('SENT');
+      expect(invRes?.invoice_id).toContain('INV-MOCK-');
+    });
+
+    it('verifies simulated webhook signatures reliably', async () => {
+      const isValid = await mockAdapter.verifyWebhookSignature?.({
+        auth_algo: 'SHA256withRSA',
+        cert_url: 'https://api.sandbox.paypal.com/cert',
+        transmission_id: 'trans_123',
+        transmission_sig: 'sig_123',
+        transmission_time: new Date().toISOString(),
+        webhook_id: 'wh_123',
+        webhook_event: { event_type: 'PAYMENT.CAPTURE.COMPLETED' },
+      });
+      expect(isValid).toBe(true);
+    });
   });
 });
 

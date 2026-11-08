@@ -4,11 +4,17 @@ import { MoneySchema, type Money } from './money.js';
 
 export const ActionTypeEnum = {
   REFUND: 'REFUND',
+  PAYOUT: 'PAYOUT',
+  INVOICE: 'INVOICE',
 } as const;
 
 export type ActionType = (typeof ActionTypeEnum)[keyof typeof ActionTypeEnum];
 
-export const ActionTypeSchema = z.enum([ActionTypeEnum.REFUND]);
+export const ActionTypeSchema = z.enum([
+  ActionTypeEnum.REFUND,
+  ActionTypeEnum.PAYOUT,
+  ActionTypeEnum.INVOICE,
+]);
 
 /**
  * Structured request intake schema.
