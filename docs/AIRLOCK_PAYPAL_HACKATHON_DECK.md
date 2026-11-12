@@ -27,7 +27,7 @@
 
 ---
 
-## Slide 2: The Problem
+## Slide 2: The Problem & What Exists Today
 
 ### Giving AI Agents Unconstrained API Access is Financial Suicide
 
@@ -43,9 +43,17 @@ flowchart LR
     end
 ```
 
+### What Exists Today (And Where They Fall Short)
+
+| Existing Approach | How It Operates | Critical Vulnerability & Where It Falls Short |
+|---|---|---|
+| **1. Direct Payment Gateways & API Keys** *(Stripe / PayPal standard SDKs)* | Blindly authenticates API secrets or bearer tokens and executes immediately. | **Zero Agent Governance:** Gateway has no concept of an AI agent loop, velocity smurfing, or hallucinated reason texts. Funds settle immediately. |
+| **2. LLM Text Guardrails & WAFs** *(Guardrails AI / Llama Guard)* | Evaluates prompt and completion strings for toxicity, PII, and basic injection. | **Disconnected from Financial Ledger:** Text-only inspection with zero awareness of remaining capture balances, cumulative caps, or payment states. |
+| **3. Post-Facto Fraud Engines** *(Riskified / Sift / Signifyd)* | Analyzes consumer transaction signals and historical buyer fraud patterns after checkout. | **Post-Mortem vs. Pre-Execution:** Flags chargebacks after the fact. Cannot halt an autonomous internal agent from issuing unauthorized payouts. |
+
 ---
 
-## Slide 3: The Solution
+## Slide 3: The Solution & What Makes Airlock Unique
 
 ### An Inline, Zero-Trust Safety Gateway for Every Financial API Action
 
@@ -60,10 +68,20 @@ flowchart LR
     C -->|"Prompt Injection / Cap Breach"| F["Hard Block / Quarantine"]
 ```
 
-#### What Makes Airlock Different:
-1. **Monotonic Security Policy:** AI risk scores can **only tighten** constraints (escalate to human review), **never loosen** or bypass a financial cap.
-2. **Strict Separation of Duties:** Server-enforced identity guarantees that requesting agents cannot approve their own high-value payouts.
-3. **Verifiable Audit Chains:** Every state transition and PayPal receipt is hashed with SHA-256 for mathematical compliance proof.
+### What Makes Airlock Truly Unique:
+
+> **Key Difference in One Sentence:**  
+> Airlock binds deterministic financial limits, real-time capture ledger state, and adversarial AI injection defense into an inline gateway where AI can only escalate to human review, never bypass financial safety.
+
+#### 3 Things Airlock Does That Existing Options Cannot:
+1. **Monotonic Disposition Algebra:** Financial rules (caps, velocity, currency allowlists) are mathematically immutable; the AI risk judge can tighten safety from `ALLOW` to `REQUIRE_APPROVAL` or `DENY`, but can never loosen or override a deterministic threshold.
+2. **Server-Enforced Separation of Duties:** Autonomous agents can formulate and request payouts, but requests exceeding thresholds ($50.00) are hard-gated in a dual-control human queue where the requesting identity is cryptographically barred from self-signing.
+3. **SHA-256 Verifiable Evidence Hash Chain:** Every state transition (`VALIDATING → EVALUATING → READY → EXECUTING → SUCCEEDED`), rule evaluation, and raw PayPal processor receipt is hashed into a tamper-evident audit ledger for financial compliance.
+
+#### Why This Is Hard to Copy (Our Moat):
+* **The Hybrid Engine Architecture:** It is not an LLM prompt wrapper or simple API proxy. It tightly couples sub-2ms deterministic state machines with asynchronous neural adversarial classification without slowing down agent velocity.
+* **Real Upstream Rail State Awareness:** It inspects and locks live capture settlement states and prior refund history directly from PayPal REST v2 rather than trusting agent-supplied context.
+* **Provable Zero False Auto-Approvals:** Hardened across 77 adversarial attack and boundary vectors (including steganographic character spacing, XML tag injection, and multi-currency edge cases) achieving 100% boundary accuracy and 0% unauthorized payouts.
 
 ---
 
@@ -232,3 +250,4 @@ flowchart LR
 * **GitHub Repository:** [https://github.com/SYNTHOS7/Airlock](https://github.com/SYNTHOS7/Airlock)
 * **Narrated Walkthrough Video:** `d:/Airlock/recordings/airlock-product-walkthrough-narrated.mp4`
 * **Interactive HTML5 Demo Player:** `airlock-live-demo-player.html`
+
