@@ -59,8 +59,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0.1
+      "rulesOnlyLatencyMs": 0.3,
+      "jevLatencyMs": 0.2
     },
     {
       "id": "HELDOUT-002",
@@ -104,7 +104,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.2,
+      "rulesOnlyLatencyMs": 0.3,
       "jevLatencyMs": 0.2
     },
     {
@@ -165,7 +165,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0.2
     }
   ]
 }

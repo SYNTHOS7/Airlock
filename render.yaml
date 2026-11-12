@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: airlock-gateway
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm run start --workspace=@airlock/dashboard
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOSTNAME
+        value: 0.0.0.0
+      - key: PAYMENT_PROVIDER
+        value: paypal_sandbox
+      - key: PAYPAL_MODE
+        value: sandbox
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: POLICY_APPROVAL_THRESHOLD_MINOR
+        value: "5000"
+      - key: POLICY_CUMULATIVE_CAP_MINOR
+        value: "20000"
+      - key: POLICY_VELOCITY_MAX_REFUNDS
+        value: "10"
+      - key: POLICY_VELOCITY_WINDOW_SECONDS
+        value: "3600"

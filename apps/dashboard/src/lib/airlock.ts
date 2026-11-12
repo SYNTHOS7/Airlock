@@ -5,6 +5,7 @@ import { createPolicyConfig } from '@airlock/policy-engine';
 import { ApprovalService, ExecutionService } from '@airlock/mcp-server';
 import type { ProviderAdapter } from '@airlock/contracts';
 import { resolve } from 'node:path';
+import { existsSync } from 'node:fs';
 
 // Singleton container for server-side Airlock instances
 declare global {
@@ -21,7 +22,11 @@ declare global {
 
 export function getAirlock() {
   if (!global.__airlockInstance) {
-    const dbPath = process.env.DATABASE_PATH || resolve(process.cwd(), '../../data/airlock.db');
+    const dbPath = process.env.DATABASE_PATH || (
+      existsSync(resolve(process.cwd(), 'data'))
+        ? resolve(process.cwd(), 'data/airlock.db')
+        : resolve(process.cwd(), '../../data/airlock.db')
+    );
     const db = createDatabase({ path: dbPath });
     const repo = new AirlockRepository(db);
 
