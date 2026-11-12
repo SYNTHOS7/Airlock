@@ -5,7 +5,7 @@ services:
     plan: free
     region: oregon
     buildCommand: npm install && npm run build
-    startCommand: npm run start --workspace=@airlock/dashboard
+    startCommand: npm start
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
@@ -28,3 +28,4 @@ services:
         value: "10"
       - key: POLICY_VELOCITY_WINDOW_SECONDS
         value: "3600"
+
