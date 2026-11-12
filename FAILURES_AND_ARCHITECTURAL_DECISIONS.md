@@ -29,7 +29,7 @@ Every layer of the Airlock architecture was selected after evaluating and reject
 | Policy Engine            | Pure Deterministic Functions | LLM Guardrails (NeMo, Llama Guard, Prompts)   |
 | Agent Interface          | Model Context Protocol (MCP) | Proprietary REST Endpoints / Webhooks         |
 | Decision Intelligence    | TypeSafe Jev Decision Model  | Generic LLM (GPT-4 / Claude prompt-and-parse) |
-| Local & Cloud Storage    | SQLite WAL + Supabase PG     | Redis / DynamoDB / Pure In-Memory             |
+| Local Storage & Cloud Schema | SQLite WAL (active) + Postgres Schema | Redis / DynamoDB / Pure In-Memory             |
 | State Machine Invariant  | Monotonic Tightening Rule    | Bi-directional Exception Overrides            |
 | Authorization Protocol   | SHA-256 Action Hash + Dual   | Bearer Session Tokens / Boolean Flags         |
 +--------------------------+------------------------------+-----------------------------------------------+
@@ -92,13 +92,13 @@ Every layer of the Airlock architecture was selected after evaluating and reject
 
 ---
 
-### F. Dual-Tier Storage (SQLite WAL + Supabase PostgreSQL) vs. Redis
+### F. Relational Write-Ahead Storage (SQLite WAL Runtime + PostgreSQL Schema) vs. Redis
 * **Alternative Evaluated:** Storing inflight operations and locks in Redis.
 * **Why Rejected:**
   * Redis is in-memory by default. A process restart or power failure during an inflight payment rail dispatch causes memory loss, leaving the system blind to whether a transaction was submitted.
-* **Why We Chose SQLite WAL + Supabase PostgreSQL:**
+* **Why We Chose SQLite WAL with PostgreSQL-Compatible Schema:**
   * **Write-Ahead Log (WAL) Durability:** `better-sqlite3` operating in WAL mode guarantees fsync-persisted state transitions before network packets leave the machine.
-  * **Dual-Tier Synchronization:** Local agent instances operate at zero latency on SQLite, while enterprise audit events sync asynchronously to Supabase PostgreSQL for cloud monitoring and compliance archiving.
+  * **Standard SQL Schema:** All entities are modeled in standard ANSI SQL (`packages/storage/src/schema.ts`), allowing local deployment on SQLite with an unblocked transition path to managed PostgreSQL (such as Supabase) via an async connection adapter.
 
 ---
 

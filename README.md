@@ -14,7 +14,7 @@ Autonomous agents excel at parsing user intentions and interacting with APIs. Ho
 3. **The Lost-Response Hazard:** When an API request times out mid-flight, naive agents treat the timeout as a failure and blindly retry with a fresh ID, creating catastrophic duplicate debits (phantom debits).
 
 ### The Airlock Thesis
-**Authorization must be strictly deterministic.** AI advisory models (such as **TypeSafe Jev**) can only *tighten* decisions toward caution, never authorize or loosen an action. Every request must be written ahead, verified before execution, guarded by single-use human approvals, and reconciled against payment rail evidence.
+**Authorization must be strictly deterministic.** An advisory text-safety layer can only tighten decisions toward caution, never authorize or loosen an action. The layer can use self-hosted IBM Granite Guardian, optional TypeSafe Jev, or a transparent local heuristic fallback.
 
 ---
 
@@ -73,9 +73,9 @@ flowchart TD
     subgraph AirlockCore["Airlock Enclave (Deterministic Safety Boundary)"]
         MCP["MCP Server (4 Tools: evaluate, request_approval, execute, verify)"]
         PolicyEngine["Deterministic Policy Engine (AUTH, LIMIT-001, LIMIT-002, VELOCITY-001, PAYPAL-DISPUTE-001)"]
-        JevIntegration["TypeSafe Jev Integration (Sanitized Untrusted Text Analysis)"]
+        JevIntegration["Advisory Text-Safety Layer (Granite Guardian / Jev / Local Heuristic)"]
         StateMachine["Guarded State Machine (Strict Allowed Transitions)"]
-        Repo["Write-Ahead Repository and Audit Trail (SQLite WAL / Supabase Postgres)"]
+        Repo["Write-Ahead Repository and Audit Trail (SQLite WAL — Postgres schema ready)"]
     end
 
     subgraph Rails["Execution and Verification Layer"]
@@ -163,7 +163,7 @@ airlock/
 │   └── dashboard/                 # Next.js 15: intake dry-run, approval queue, audit timeline
 ├── packages/
 │   ├── contracts/                 # Shared domain types (Money, State Machine, ActionRequest, ToolResult, Jev)
-│   └── storage/                   # SQLite WAL mode & Supabase Postgres schema, atomic repo, startup recovery
+│   └── storage/                   # SQLite WAL mode & ANSI SQL schema, atomic repo, startup recovery
 ├── services/
 │   ├── mcp-server/                # MCP SDK Server (4 tools), ExecutionService, ApprovalService, FaultWrapper
 │   └── policy-engine/             # Pure deterministic engine, facts loader, rules, Jev client
@@ -222,7 +222,18 @@ PAYPAL_CLIENT_SECRET=your_sandbox_client_secret
 PAYPAL_BASE_URL=https://api-m.sandbox.paypal.com
 ```
 
-To enable live **TypeSafe Jev** advisory signals:
+To use the self-hosted open-source text-safety model, install Ollama and pull IBM Granite Guardian:
+```bash
+ollama pull granite4.1-guardian:8b
+```
+Then configure the Airlock server:
+```dotenv
+OLLAMA_BASE_URL=http://localhost:11434
+AIRLOCK_GUARD_MODEL=granite4.1-guardian:8b
+```
+The local model runs on the configured Ollama host. It only adds a risk signal; deterministic Airlock rules still make the final decision. The model is about 6.9 GB in the Ollama library, so running it needs suitable memory and compute. If the Ollama URL is not set, Airlock uses its local heuristic fallback.
+
+To use paid **TypeSafe Jev** instead (optional):
 ```dotenv
 TYPESAFE_API_KEY=your_typesafe_api_key
 TYPESAFE_BASE_URL=https://api.typesafe.ai
@@ -254,7 +265,7 @@ Open [http://localhost:3000](http://localhost:3000) to view:
 
 ## 7. Testing & Empirical Evaluation
 
-### Test Coverage Breakdown (134 Passed, 4 Skipped)
+### Test Coverage Breakdown (154 Passed, 4 Skipped)
 - `packages/contracts`: Minor-unit money arithmetic, SHA-256 fingerprinting, guarded state transitions, monotonic strictness ordering.
 - `packages/storage`: SQLite WAL mode, idempotency parameter conflict detection (`IDEMP-002`), startup crash reconciliation (`reconcileStartupOperations`).
 - `services/policy-engine`: Deterministic rules (`AUTH-001`, `INPUT-001`, `STATE-001`, `LIMIT-001`, `LIMIT-002`, `VELOCITY-001`, `APPROVAL-001`, `UNCERTAIN-001`, `PAYPAL-DISPUTE-001`).
@@ -266,15 +277,17 @@ Open [http://localhost:3000](http://localhost:3000) to view:
 - **What they prove:** Invariants are mathematically guarded. A request cannot jump states, self-approval is impossible, approval tokens cannot be reused, prompt injections cannot loosen a `DENY`, and response timeouts never trigger blind retries.
 - **What they do not prove:** Concurrency performance under 10,000+ simultaneous transactions; multi-region active-active database replication.
 
-### Model Evaluation: Rules-Only vs. Jev + Policy
+### Model Evaluation: Rules-Only vs. Local Heuristic + Policy
 We evaluated scenarios across adversarial prompt injections, excessive limits, split refunds, ambiguous requests, valid returns, and currency discrepancies:
+
+The committed scenario results use the deterministic local heuristic fallback, not Granite Guardian or a live Jev API. These numbers describe performance on this project’s authored scenarios; they are not evidence of general real-world detection accuracy.
 
 | Evaluation Set | Rules-Only Accuracy | Jev + Policy Accuracy | Jev Uplift | False Blocks |
 |---|---|---|---|---|
-| **Benchmark Suite (105)** | 52.4% (55/105) | **100.0% (105/105)** | +50 cases (+47.6%) | **0 cases (0.0%)** |
+| **Benchmark Suite (105)** | 61.9% (65/105) | **100.0% (105/105)** | +40 cases (+38.1%) | **0 cases (0.0%)** |
 | **Held-Out Scenarios (8)** | 50.0% (4/8) | **100.0% (8/8)** | +4 cases (+50.0%) | **0 cases (0.0%)** |
 
-**Key Finding:** Deterministic rules reliably catch numeric boundary violations (`LIMIT-001`, `LIMIT-002`), but cannot evaluate linguistic semantics. TypeSafe Jev (and its local analytical heuristic fallback) analyzes prompt injection and ambiguity inside untrusted text. In our 105-scenario evaluation suite, combining them monotonically yielded 100% classification accuracy across the dataset with zero false blocks on legitimate requests.
+**Key Finding:** Deterministic rules catch numeric boundary violations (`LIMIT-001`, `LIMIT-002`); the advisory text layer can flag suspicious or unclear reasons. In this synthetic benchmark, the heuristic and policy combination matched all 105 expected ranges.
 
 ---
 
@@ -292,7 +305,7 @@ flowchart LR
         Backend["MCP Server & Policy Engine API<br/>services/mcp-server"]
     end
 
-    subgraph Supabase["Supabase (Managed PostgreSQL)"]
+    subgraph Supabase["Target PostgreSQL (Planned / Schema Ready)"]
         PG[("PostgreSQL Database<br/>packages/storage/src/schema.ts")]
     end
 
@@ -311,11 +324,16 @@ flowchart LR
 
 ### 2. Backend on Render (`services/mcp-server`)
 - Deploy as a Node.js web service or Docker container (`npm run start`).
-- Set environment variables: `DATABASE_URL`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `TYPESAFE_API_KEY`.
+- Set environment variables: `DATABASE_URL`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, and either `OLLAMA_BASE_URL` or an optional `TYPESAFE_API_KEY`.
 
-### 3. Database on Supabase (PostgreSQL)
-- The database schema in [`packages/storage/src/schema.ts`](packages/storage/src/schema.ts) is 100% standard SQL compatible with Supabase PostgreSQL (tables: `operations`, `decisions`, `approvals`, `evidence`, `audit_log`).
-- Set `DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres`.
+### 3. Database Storage (SQLite Current; Supabase PostgreSQL Schema Ready)
+- **Current Runtime:** Airlock executes on local SQLite with WAL mode (`packages/storage/src/database.ts` using `better-sqlite3`). The demo dashboard and local server use this engine without remote dependencies.
+- **PostgreSQL Schema:** [`packages/storage/src/schema.ts`](packages/storage/src/schema.ts) provides standard ANSI SQL table definitions (`operations`, `decisions`, `approvals`, `evidence`, `audit_log`) ready for Supabase PostgreSQL.
+- **Smallest Safe Implementation Needed for Live Supabase:**
+  1. Add a PostgreSQL connection client/pool (`pg` or `@supabase/supabase-js`) implementing the `StorageRepository` interface.
+  2. Adapt the synchronous statement calls to async query handlers.
+  3. Initialize the schema via `SCHEMA_SQL` on Supabase.
+- **Safety Boundary:** The system defaults to local SQLite and the mock payment rail. Live payments are never dispatched in the demo environment.
 
 ---
 
@@ -328,9 +346,9 @@ In accordance with safety and evaluation guidelines, we explicitly state Airlock
    - **Deterministic Mock Adapter:** All 154 automated unit, integration, and adversarial tests currently run against `@airlock/provider-mock` and in-memory SQLite with 100% pass rate.
    - **Live PayPal Sandbox Adapter:** Fully implemented in `@airlock/provider-paypal-sandbox` with v2 Payments, Disputes (`/v1/customer/disputes`), Payouts (`/v1/payments/payouts`), Invoicing (`/v2/invoicing/invoices`), and Webhook Signature Verification. However, in automated CI environments without credentials, 4 tests in `tests/provider/conformance.test.ts` gracefully skip.
    - **Dropped-Response Demo Flow:** The lost-response fault simulation and outcome verification run strictly on the **mock provider** wrapped with `FaultInjectedAdapter`.
-3. **Jev Status (Real vs. Local Heuristic Fallback):**
-   - The Jev client (`services/policy-engine/src/jev/client.ts`) includes the live HTTP client for `https://api.typesafe.ai/v1/analyze`.
-   - In the absence of a `TYPESAFE_API_KEY`, the client operates in **deterministic local analytical fallback mode** (`jev-local-heuristic-v2`), evaluating prompt injection regexes, contradiction matching, and ambiguity rules locally. No external calls were made to live Jev servers.
+3. **Decision Layer (Local vs. Hosted):**
+   - When `OLLAMA_BASE_URL` is configured, the client uses the self-hosted IBM Granite Guardian model. No Jev API key is needed; inference runs on the configured Ollama host.
+   - Without Ollama, the client uses the deterministic local heuristic (`jev-local-heuristic-v2`). The optional paid Jev API is used only when no Ollama endpoint is configured and a Jev key is present.
 4. **Demo Authentication Only:**
    - Identity is determined by simulated demo user roles (`agent_1`, `approver_1`, `viewer_1`) via `x-airlock-user` or demo bearer headers.
    - Production requires replacing this with enterprise OIDC/OAuth2/SAML authentication (e.g., Supabase Auth, Clerk, Auth0).

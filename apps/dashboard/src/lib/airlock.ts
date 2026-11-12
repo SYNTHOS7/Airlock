@@ -1,7 +1,9 @@
 import { createDatabase, AirlockRepository, reconcileStartupOperations } from '@airlock/storage';
 import { MockProviderAdapter } from '@airlock/provider-mock';
+import { PayPalSandboxAdapter } from '@airlock/provider-paypal-sandbox';
 import { createPolicyConfig } from '@airlock/policy-engine';
 import { ApprovalService, ExecutionService } from '@airlock/mcp-server';
+import type { ProviderAdapter } from '@airlock/contracts';
 import { resolve } from 'node:path';
 
 // Singleton container for server-side Airlock instances
@@ -10,7 +12,7 @@ declare global {
   var __airlockInstance: {
     db: any;
     repo: AirlockRepository;
-    adapter: MockProviderAdapter;
+    adapter: ProviderAdapter;
     approvalService: ApprovalService;
     executionService: ExecutionService;
     config: any;
@@ -22,7 +24,26 @@ export function getAirlock() {
     const dbPath = process.env.DATABASE_PATH || resolve(process.cwd(), '../../data/airlock.db');
     const db = createDatabase({ path: dbPath });
     const repo = new AirlockRepository(db);
-    const adapter = new MockProviderAdapter('success');
+
+    const providerEnv = (process.env.PAYMENT_PROVIDER || 'mock').trim().toLowerCase();
+    let adapter: ProviderAdapter;
+
+    if (providerEnv === 'paypal_sandbox') {
+      const sandboxAdapter = new PayPalSandboxAdapter();
+      if (!sandboxAdapter.isConfigured()) {
+        throw new Error(
+          'CONFIGURATION ERROR: PAYMENT_PROVIDER is set to "paypal_sandbox", but PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET is missing or invalid. Set valid PayPal Sandbox credentials in .env or set PAYMENT_PROVIDER=mock.'
+        );
+      }
+      adapter = sandboxAdapter;
+    } else if (providerEnv === 'mock') {
+      adapter = new MockProviderAdapter('success');
+    } else {
+      throw new Error(
+        `CONFIGURATION ERROR: Unknown PAYMENT_PROVIDER "${providerEnv}". Allowed values are "mock" (default safe rail) or "paypal_sandbox".`
+      );
+    }
+
     const config = createPolicyConfig({
       approval_threshold_minor: Number(process.env.POLICY_APPROVAL_THRESHOLD_MINOR) || 5000, // $50.00
       cumulative_cap_minor: Number(process.env.POLICY_CUMULATIVE_CAP_MINOR) || 20000, // $200.00
@@ -48,4 +69,3 @@ export function getAirlock() {
 
   return global.__airlockInstance;
 }
-

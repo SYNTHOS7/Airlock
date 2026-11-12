@@ -165,7 +165,7 @@ export function RedTeamView({ currentUser }: RedTeamViewProps) {
             <h2 className="text-base font-black text-white">Red-Team Exploit Playground</h2>
           </div>
           <p className="text-[11px] font-medium" style={{ color: C.gray2 }}>
-            Live adversarial attack simulation · All payloads evaluated against real policy engine + TypeSafe Jev AI
+            Live adversarial attack simulation · Scenarios checked by the deterministic policy rules and configured text-safety layer
           </p>
         </div>
         <button
@@ -233,8 +233,8 @@ export function RedTeamView({ currentUser }: RedTeamViewProps) {
         <Eye className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: C.gray3 }} />
         <p className="text-[11px]" style={{ color: C.gray3 }}>
           <strong style={{ color: C.primary }}>Educational Red-Teaming:</strong> These payloads simulate real-world AI agent attack vectors against financial systems.
-          Airlock's defense uses a <strong style={{ color: C.white }}>hybrid deterministic + TypeSafe Jev AI</strong> approach — not LLM guardrails which can be jailbroken.
-          TypeSafe uses calibrated probability thresholds, not prompt-and-parse, making it adversarially robust.
+          Airlock's defense uses a <strong style={{ color: C.white }}>deterministic policy + optional self-hosted safety model</strong> approach — not LLM guardrails which can be jailbroken.
+          Airlock policy rules make the final decision. An optional self-hosted model can only add caution; without it, the local heuristic is shown.
         </p>
       </div>
     </div>

@@ -25,14 +25,14 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
   async function fetchQueue() {
     setLoading(true);
     try {
-      const res = await fetch('/api/approvals');
+      const res = await fetch('/api/approvals', { headers: { 'x-airlock-user': currentUser.id } });
       const data = await res.json();
       setApprovals(data.approvals || []);
     } catch {}
     finally { setLoading(false); }
   }
 
-  useEffect(() => { fetchQueue(); }, []);
+  useEffect(() => { fetchQueue(); }, [currentUser]);
 
   async function handleAction(approvalId: string, action: 'approve' | 'reject') {
     setProcessingId(approvalId);
@@ -220,7 +220,7 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold glass-card hover-neon transition"
                     style={{ border: `1px solid rgba(74,74,74,0.4)`, color: C.primary }}
                   >
-                    <Smartphone className="w-3.5 h-3.5" /> Mobile Push (Simulated)
+                    <Smartphone className="w-3.5 h-3.5" /> Preview mobile approval (demo)
                   </button>
 
                   <div className="flex items-center gap-3">
@@ -307,7 +307,7 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
                 className="w-full btn-primary py-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-black shadow-lg disabled:opacity-40"
               >
                 <Fingerprint className="w-4 h-4 text-cyan-300" />
-                Authorize with FaceID / Biometrics
+                Simulate manager approval
               </button>
               <button
                 onClick={() => setMobileModalItem(null)}

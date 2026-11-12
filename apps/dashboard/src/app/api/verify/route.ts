@@ -1,19 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getAirlock } from '@/lib/airlock';
 import { OutcomeVerifier } from '@airlock/provider-paypal-sandbox';
-import { resolveUser } from '@airlock/mcp-server';
+import { requireRole, isUser } from '@/lib/api-auth';
 
 export async function POST(req: Request) {
   try {
+    // Shared server-side authentication: require 'viewer' or 'approver' role
+    // Fails closed if unauthenticated, forbidden, or if demo auth is disabled in production
+    const userOrError = requireRole(req, 'viewer', 'approver');
+    if (!isUser(userOrError)) return userOrError;
+
     const body = await req.json();
-    const userHeader = req.headers.get('x-airlock-user');
-    const authHeader = req.headers.get('authorization');
-    const user = resolveUser(userHeader, authHeader);
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized: Missing or invalid user identity.' }, { status: 401 });
-    }
-
     const { operation_id } = body;
     if (!operation_id) {
       return NextResponse.json({ error: 'operation_id is required' }, { status: 400 });
@@ -34,4 +31,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

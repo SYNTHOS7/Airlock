@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header, type UserContextValue, USERS } from '@/components/Header';
 import { AgenticCommerceView } from '@/components/AgenticCommerceView';
 import { NewRequestView } from '@/components/NewRequestView';
@@ -8,159 +8,89 @@ import { ApprovalQueueView } from '@/components/ApprovalQueueView';
 import { AuditTimelineView } from '@/components/AuditTimelineView';
 import { RedTeamView } from '@/components/RedTeamView';
 import { PolicyStudioView, type PolicyStudioSettings } from '@/components/PolicyStudioView';
-import { Bot, PlusCircle, Clock, History, Bug, SlidersHorizontal, ShieldCheck } from 'lucide-react';
+import { OverviewView } from '@/components/OverviewView';
+import { Bot, Bug, Clock, FilePlus2, History, House, SlidersHorizontal } from 'lucide-react';
 
-const C = {
-  primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77',
-  violet: '#9013FE', gold: '#F8E71C', white: '#FFFFFF', gray1: '#D1D1D1',
-  gray2: '#B7B7B7', gray3: '#4A4A4A', s0: '#07090f', s1: '#0e1117', s3: '#1c2333',
-};
+const C = { primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77', gold: '#F8E71C', white: '#FFFFFF', gray3: '#4A4A4A', s0: '#07090f' };
+type TabId = 'overview' | 'agentic' | 'request' | 'queue' | 'audit' | 'redteam' | 'studio';
+type OverviewStats = { pending: number; review: number; completed: number };
 
-type TabId = 'agentic' | 'request' | 'queue' | 'audit' | 'redteam' | 'studio';
-interface Metrics { protected: number; blocked: number; latencyMs: number; capitalProtectedUsd?: number; }
-
-const TABS: { id: TabId; label: string; Icon: React.FC<any>; color: string; badge?: true; isNew?: string }[] = [
-  { id: 'agentic', label: 'Agentic Commerce', Icon: Bot,               color: C.teal,    isNew: 'AI WHEEL' },
-  { id: 'request', label: 'New Request',      Icon: PlusCircle,        color: C.primary },
-  { id: 'queue',   label: 'Approval Queue',   Icon: Clock,             color: C.orange,  badge: true },
-  { id: 'audit',   label: 'Audit Timeline',   Icon: History,           color: C.primary },
-  { id: 'redteam', label: 'Red-Team Lab',     Icon: Bug,               color: C.pink,    isNew: 'DEFENSE' },
-  { id: 'studio',  label: 'Policy Studio',    Icon: SlidersHorizontal, color: C.gold,    isNew: 'STUDIO' },
+const TABS: { id: TabId; label: string; Icon: React.ElementType; color: string }[] = [
+  { id: 'overview', label: 'Overview', Icon: House, color: C.teal },
+  { id: 'request', label: 'Refund request', Icon: FilePlus2, color: C.primary },
+  { id: 'queue', label: 'Approvals', Icon: Clock, color: C.orange },
+  { id: 'audit', label: 'Activity & evidence', Icon: History, color: C.primary },
+  { id: 'redteam', label: 'Safety lab', Icon: Bug, color: C.pink },
+  { id: 'studio', label: 'Policy settings', Icon: SlidersHorizontal, color: C.gold },
+  { id: 'agentic', label: 'Agentic commerce', Icon: Bot, color: C.teal },
 ];
 
 export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<UserContextValue>(USERS[0]);
-  const [activeTab,   setActiveTab]   = useState<TabId>('agentic');
-  const [pendingCount, setPendingCount] = useState(0);
-  const [metrics, setMetrics] = useState<Metrics>({ protected: 0, blocked: 0, latencyMs: 0 });
-  const [policySettings, setPolicySettings] = useState<PolicyStudioSettings>({
-    approvalThreshold: 50,
-    cumulativeCap: 200,
-    velocityLimit: 5,
-    jevSensitivity: 'standard',
-  });
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [overviewStats, setOverviewStats] = useState<OverviewStats>({ pending: 0, review: 0, completed: 0 });
+  const [policySettings, setPolicySettings] = useState<PolicyStudioSettings>({ approvalThreshold: 50, cumulativeCap: 200, velocityLimit: 5, jevSensitivity: 'standard' });
+  const [activeProvider, setActiveProvider] = useState<'mock' | 'paypal_sandbox'>('mock');
 
-  async function updatePendingCount() {
+  async function updateOverviewStats() {
     try {
-      const res = await fetch('/api/approvals');
-      const data = await res.json();
-      setPendingCount(data.approvals?.length || 0);
-    } catch {}
-  }
-
-  async function fetchMetrics() {
-    try {
-      const t0  = Date.now();
-      const res = await fetch('/api/audit');
-      const data = await res.json();
-      const latency = Date.now() - t0;
-      const rows: any[] = data.audit_log || [];
-      const protectedCount = rows.filter(r => ['COMPLETED', 'AWAITING_APPROVAL'].includes(r.to_state)).length;
-      const blockedCount = rows.filter(r => r.to_state === 'DENIED').length;
-
-      setMetrics({
-        protected: protectedCount,
-        blocked:   blockedCount,
-        latencyMs: latency,
-        capitalProtectedUsd: blockedCount * 350 + 14850,
-      });
-    } catch {}
+      const headers = { 'x-airlock-user': currentUser.id };
+      const [opsRes, approvalsRes] = await Promise.all([fetch('/api/operations', { headers }), fetch('/api/approvals', { headers })]);
+      const [opsData, approvalsData] = await Promise.all([opsRes.json(), approvalsRes.json()]);
+      const operations: any[] = opsData.operations || [];
+      const pending = approvalsData.approvals?.length || 0;
+      if (opsData.provider) setActiveProvider(opsData.provider);
+      setOverviewStats({ pending, review: operations.filter(op => op.state === 'NEEDS_REVIEW').length, completed: operations.filter(op => op.state === 'SUCCEEDED').length });
+    } catch { /* Keep the last known dashboard counts if the API is temporarily unavailable. */ }
   }
 
   useEffect(() => {
-    updatePendingCount();
-    fetchMetrics();
-    const iv = setInterval(() => { updatePendingCount(); fetchMetrics(); }, 6000);
-    return () => clearInterval(iv);
-  }, []);
+    void updateOverviewStats();
+    const interval = setInterval(() => void updateOverviewStats(), 10000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: C.s0, color: C.white }}>
-      <Header
-        currentUser={currentUser}
-        onUserChange={setCurrentUser}
-        pendingApprovalsCount={pendingCount}
-        metrics={metrics}
-      />
-
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-6">
-
-        {/* Nav Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1" style={{ borderBottom: `1px solid rgba(74,74,74,0.4)` }}>
+    <div className="dashboard-shell min-h-screen flex flex-col" style={{ color: C.white }}>
+      <Header currentUser={currentUser} onUserChange={setCurrentUser} pendingApprovalsCount={overviewStats.pending} />
+      <main className="dashboard-main flex-1 max-w-7xl w-full mx-auto px-4 py-5 md:px-8 md:py-7">
+        <nav aria-label="Dashboard sections" role="tablist" className="dashboard-tabs mb-6 flex items-center gap-1 overflow-x-auto p-1.5">
           {TABS.map(tab => {
-            const isActive = activeTab === tab.id;
+            const selected = activeTab === tab.id;
             return (
-              <button
-                key={tab.id}
+              <button key={tab.id} id={`tab-${tab.id}`} role="tab" aria-selected={selected} aria-controls="dashboard-panel"
                 onClick={() => setActiveTab(tab.id)}
-                className="flex items-center gap-2 px-4 py-3 text-sm font-bold transition relative whitespace-nowrap"
-                style={{
-                  color: isActive ? tab.color : C.gray3,
-                  borderBottom: isActive ? `2px solid ${tab.color}` : '2px solid transparent',
-                }}
-              >
-                <tab.Icon className="w-4 h-4" />
-                {tab.label}
-                {tab.badge && pendingCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black min-w-[18px] text-center"
-                    style={{ background: C.orange, color: C.s0 }}>
-                    {pendingCount}
-                  </span>
-                )}
-                {tab.isNew && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-black tracking-wide"
-                    style={{ background: `${tab.color}20`, border: `1px solid ${tab.color}40`, color: tab.color }}>
-                    {tab.isNew}
-                  </span>
-                )}
+                className={`dashboard-tab flex items-center gap-2 px-3.5 py-2.5 text-sm font-semibold whitespace-nowrap ${selected ? 'is-active' : ''}`}>
+                <tab.Icon className="h-4 w-4" />{tab.label}
+                {tab.id === 'queue' && overviewStats.pending > 0 && <span className="tab-count min-w-5 rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold">{overviewStats.pending}</span>}
               </button>
             );
           })}
-        </div>
+        </nav>
 
-        {/* View Routing */}
-        <div>
-          {activeTab === 'agentic' && (
-            <AgenticCommerceView
-              currentUser={currentUser}
-              onActionComplete={updatePendingCount}
-            />
-          )}
-          {activeTab === 'request' && (
-            <NewRequestView
-              currentUser={currentUser}
-              onActionComplete={updatePendingCount}
-              policySettings={policySettings}
-            />
-          )}
-          {activeTab === 'queue' && (
-            <ApprovalQueueView
-              currentUser={currentUser}
-              onActionComplete={updatePendingCount}
-            />
-          )}
-          {activeTab === 'audit' && <AuditTimelineView />}
+        <div id="dashboard-panel" role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="dashboard-panel">
+          {activeTab === 'overview' && <OverviewView counts={overviewStats} onNavigate={setActiveTab} />}
+          {activeTab === 'agentic' && <AgenticCommerceView currentUser={currentUser} onActionComplete={updateOverviewStats} policySettings={policySettings} activeProvider={activeProvider} />}
+          {activeTab === 'request' && <NewRequestView currentUser={currentUser} onActionComplete={updateOverviewStats} policySettings={policySettings} activeProvider={activeProvider} />}
+          {activeTab === 'queue' && <ApprovalQueueView currentUser={currentUser} onActionComplete={updateOverviewStats} />}
+          {activeTab === 'audit' && <AuditTimelineView currentUserId={currentUser.id} />}
           {activeTab === 'redteam' && <RedTeamView currentUser={currentUser} />}
-          {activeTab === 'studio' && (
-            <PolicyStudioView
-              settings={policySettings}
-              onSettingsChange={setPolicySettings}
-            />
-          )}
+          {activeTab === 'studio' && <PolicyStudioView settings={policySettings} onSettingsChange={setPolicySettings} currentUser={currentUser} />}
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="py-3 px-6" style={{ borderTop: `1px solid rgba(74,74,74,0.25)`, background: 'rgba(14,17,23,0.8)' }}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px]" style={{ color: C.gray3 }}>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-3.5 h-3.5" style={{ color: `${C.teal}60` }} />
-            <span>Airlock — Zero-Trust Financial AI Safety Gateway</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span style={{ color: 'rgba(74,74,74,0.7)' }}>MCP · TypeSafe Jev · Three.js 3D Vault · SHA-256 · WAL</span>
-            <span className="font-black" style={{ color: `${C.primary}80` }}>PayPal AI Hackathon 2025</span>
-          </div>
+      <footer className="border-t border-slate-800/70 bg-slate-950/40 px-5 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-xs text-slate-500">
+          <span>Airlock demo environment</span>
+          <span className="flex items-center gap-1.5 font-semibold">
+            Payment rail:
+            <span className={`px-2 py-0.5 rounded text-[11px] font-mono ${
+              activeProvider === 'paypal_sandbox'
+                ? 'bg-blue-950 text-blue-300 border border-blue-500/30'
+                : 'bg-slate-800 text-slate-300 border border-slate-700'
+            }`}>
+              {activeProvider === 'paypal_sandbox' ? 'PayPal Sandbox / Test Mode' : 'Mock (Local In-Memory)'}
+            </span>
+          </span>
         </div>
       </footer>
     </div>

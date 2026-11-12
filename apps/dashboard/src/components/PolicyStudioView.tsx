@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { SlidersHorizontal, ShieldCheck, Check, RotateCcw, Zap, Lock, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { SlidersHorizontal, ShieldCheck, Check, RotateCcw, Zap, Lock, Info, AlertCircle, Loader2 } from 'lucide-react';
+import type { UserContextValue } from './Header';
 
 const C = {
   primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77',
@@ -19,19 +20,62 @@ export interface PolicyStudioSettings {
 interface PolicyStudioViewProps {
   settings: PolicyStudioSettings;
   onSettingsChange: (newSettings: PolicyStudioSettings) => void;
+  currentUser: UserContextValue;
 }
 
-export function PolicyStudioView({ settings, onSettingsChange }: PolicyStudioViewProps) {
+export function PolicyStudioView({ settings, onSettingsChange, currentUser }: PolicyStudioViewProps) {
   const [localSettings, setLocalSettings] = useState<PolicyStudioSettings>(settings);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSave() {
-    onSettingsChange(localSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  useEffect(() => {
+    fetch('/api/policy')
+      .then(res => res.json())
+      .then(data => {
+        if (data.config) {
+          const loaded: PolicyStudioSettings = {
+            approvalThreshold: Math.round(data.config.approval_threshold_minor / 100),
+            cumulativeCap: Math.round(data.config.cumulative_cap_minor / 100),
+            velocityLimit: data.config.velocity_max_count,
+            jevSensitivity: 'standard',
+          };
+          setLocalSettings(loaded);
+          onSettingsChange(loaded);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/policy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-airlock-user': currentUser.id },
+        body: JSON.stringify({
+          approval_threshold_minor: localSettings.approvalThreshold * 100,
+          cumulative_cap_minor: localSettings.cumulativeCap * 100,
+          velocity_max_count: localSettings.velocityLimit,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update server policy');
+      }
+      onSettingsChange(localSettings);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleReset() {
+  async function handleReset() {
     const defaults: PolicyStudioSettings = {
       approvalThreshold: 50,
       cumulativeCap: 200,
@@ -39,9 +83,31 @@ export function PolicyStudioView({ settings, onSettingsChange }: PolicyStudioVie
       jevSensitivity: 'standard',
     };
     setLocalSettings(defaults);
-    onSettingsChange(defaults);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/policy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-airlock-user': currentUser.id },
+        body: JSON.stringify({
+          approval_threshold_minor: defaults.approvalThreshold * 100,
+          cumulative_cap_minor: defaults.cumulativeCap * 100,
+          velocity_max_count: defaults.velocityLimit,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to reset server policy');
+      }
+      onSettingsChange(defaults);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setSaving(false);
+    }
   }
 
   const invariants = [
@@ -52,7 +118,7 @@ export function PolicyStudioView({ settings, onSettingsChange }: PolicyStudioVie
     { code: 'APPROVAL-002', name: 'Separation of Duties', desc: 'Requester cannot self-approve; cryptographic action hash bound', status: 'ENFORCED' },
     { code: 'PAYPAL-DISPUTE-001', name: 'Dispute Chargeback Shield', desc: 'Active dispute on PayPal auto-freezes refund to prevent double-loss', status: 'ENFORCED' },
     { code: 'UNCERTAIN-001', name: 'Two-Phase Commit WAL', desc: 'Network timeouts enter OUTCOME_UNKNOWN; blind retries blocked', status: 'ENFORCED' },
-    { code: 'JEV-001', name: 'TypeSafe Adversarial Shield', desc: `Calibrated Decision Model scan (${localSettings.jevSensitivity.toUpperCase()})`, status: 'ENFORCED' },
+    { code: 'TEXT-001', name: 'Text safety checks', desc: 'Configured local model or heuristic signals (Standard policy; sensitivity toggle is demo preview)', status: 'ENFORCED' },
   ];
 
   return (
@@ -65,13 +131,14 @@ export function PolicyStudioView({ settings, onSettingsChange }: PolicyStudioVie
             <h2 className="text-base font-black text-white">Interactive Policy Studio</h2>
           </div>
           <p className="text-[11px] font-medium" style={{ color: C.gray2 }}>
-            Adjust live financial safety thresholds & invariants · Applied in real-time to the policy evaluation engine
+            Adjust live financial safety thresholds · Applied in real-time across both New Request and Agentic Commerce flows
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleReset}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold glass-card hover-neon transition"
+            disabled={saving}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold glass-card hover-neon transition disabled:opacity-50"
             style={{ border: `1px solid rgba(74,74,74,0.4)`, color: C.gray2 }}
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -79,12 +146,33 @@ export function PolicyStudioView({ settings, onSettingsChange }: PolicyStudioVie
           </button>
           <button
             onClick={handleSave}
-            className="btn-primary flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-lg"
+            disabled={saving}
+            className="btn-primary flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-lg disabled:opacity-50"
           >
-            {saved ? <><Check className="w-3.5 h-3.5" /> Invariants Active!</> : <><Zap className="w-3.5 h-3.5" /> Apply Live Invariants</>}
+            {saving ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</> :
+             saved ? <><Check className="w-3.5 h-3.5" /> Invariants Active!</> :
+             <><Zap className="w-3.5 h-3.5" /> Apply Live Invariants</>}
           </button>
         </div>
       </div>
+
+      {/* Role and Error Banners */}
+      {currentUser.role !== 'approver' && (
+        <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <span>Viewing as <strong>{currentUser.name}</strong> ({currentUser.role}). Authoritative policy modifications require an <strong>Approver</strong> role.</span>
+          </div>
+          <span className="text-[10px] uppercase font-bold text-amber-400 font-mono">Read-Only Mode</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="p-3 rounded-lg bg-pink-950/40 border border-pink-500/40 text-xs text-pink-200 flex items-center gap-2 animate-count-up">
+          <AlertCircle className="w-4 h-4 text-pink-400 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Sliders Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -173,8 +261,11 @@ export function PolicyStudioView({ settings, onSettingsChange }: PolicyStudioVie
         <div className="glass-card rounded-xl p-5 hover-neon transition-all" style={{ border: `1px solid rgba(74,74,74,0.4)` }}>
           <div className="flex items-center justify-between mb-2">
             <div>
-              <div className="text-xs font-black text-white">TypeSafe Jev AI Scan Sensitivity</div>
-              <div className="text-[10px]" style={{ color: C.gray3 }}>Prompt injection & semantic ambiguity detection</div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-white">Text safety scan sensitivity</span>
+                <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 border border-amber-500/30">Demo Only</span>
+              </div>
+              <div className="text-[10px]" style={{ color: C.gray3 }}>Advisory preset preview — does not alter deterministic evaluation rules</div>
             </div>
             <div className="text-xs font-black font-mono uppercase" style={{ color: localSettings.jevSensitivity === 'strict' ? C.pink : C.teal }}>
               {localSettings.jevSensitivity}

@@ -7,14 +7,14 @@
       "unsafeBlockRate": 37.5,
       "falseBlockRate": 0,
       "correctAbstentionRate": 33.3,
-      "avgLatencyMs": 0.2
+      "avgLatencyMs": 0.3
     },
     "jevPolicy": {
       "accuracyRate": 100,
       "unsafeBlockRate": 100,
       "falseBlockRate": 0,
       "correctAbstentionRate": 33.3,
-      "avgLatencyMs": 0.2
+      "avgLatencyMs": 0.3
     },
     "upliftCount": 13,
     "overTightenedCount": 0,
@@ -64,8 +64,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 1.1,
-      "jevLatencyMs": 2.5
+      "rulesOnlyLatencyMs": 1.5,
+      "jevLatencyMs": 2.3
     },
     {
       "id": "SAFE-002",
@@ -79,8 +79,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 1.5
+      "rulesOnlyLatencyMs": 0,
+      "jevLatencyMs": 1.8
     },
     {
       "id": "SAFE-003",
@@ -110,7 +110,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.2
+      "jevLatencyMs": 0.1
     },
     {
       "id": "SAFE-005",
@@ -124,8 +124,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 3.4,
-      "jevLatencyMs": 0.4
+      "rulesOnlyLatencyMs": 3.7,
+      "jevLatencyMs": 0.6
     },
     {
       "id": "SAFE-006",
@@ -139,7 +139,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -154,8 +154,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.3,
-      "jevLatencyMs": 0.3
+      "rulesOnlyLatencyMs": 0.4,
+      "jevLatencyMs": 0.5
     },
     {
       "id": "LIMIT-002",
@@ -169,8 +169,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0.2
+      "rulesOnlyLatencyMs": 0.3,
+      "jevLatencyMs": 0.3
     },
     {
       "id": "STATE-001",
@@ -185,7 +185,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0.3
     },
     {
       "id": "AUTH-001",
@@ -230,7 +230,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "VELOCITY-001",
@@ -245,7 +245,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "MISMATCH-001",
@@ -259,7 +259,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": true,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -290,7 +290,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "MISMATCH-004",
@@ -305,7 +305,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "MISMATCH-005",
@@ -335,7 +335,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "INJECT-002",
@@ -350,7 +350,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "INJECT-003",
@@ -365,7 +365,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "INJECT-004",
@@ -380,7 +380,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "INJECT-005",
@@ -395,7 +395,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "AMBIG-001",
@@ -410,7 +410,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "AMBIG-002",
@@ -425,7 +425,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "AMBIG-003",
@@ -440,7 +440,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     }
   ]
 }

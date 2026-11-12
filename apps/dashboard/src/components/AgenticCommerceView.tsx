@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { ThreeVaultCanvas } from './ThreeVaultCanvas';
 import type { UserContextValue } from './Header';
+import type { PolicyStudioSettings } from './PolicyStudioView';
 
 const C = {
   primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77',
@@ -69,9 +70,11 @@ interface StepLog {
 interface AgenticCommerceViewProps {
   currentUser: UserContextValue;
   onActionComplete: () => void;
+  policySettings?: PolicyStudioSettings;
+  activeProvider?: 'mock' | 'paypal_sandbox';
 }
 
-export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCommerceViewProps) {
+export function AgenticCommerceView({ currentUser, onActionComplete, policySettings, activeProvider }: AgenticCommerceViewProps) {
   const [promptText, setPromptText] = useState<string>(AGENT_PRESETS[0].prompt);
   const [selectedPreset, setSelectedPreset] = useState<string>(AGENT_PRESETS[0].id);
   const [isRunning, setIsRunning] = useState(false);
@@ -172,24 +175,25 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
       if (evalData.disposition === 'ALLOW') {
         setVaultStatus('allow');
         addLog(
-          'Policy & TypeSafe Jev Pass',
-          'Deterministic invariants verified. Free-text scanned clean. Disposition: ALLOW',
+          'Policy and text safety checks passed',
+          'Policy rules and the text safety checks did not find a reason to pause this request.',
           'success',
           evalData
         );
       } else if (evalData.disposition === 'REQUIRE_APPROVAL') {
         setVaultStatus('require_approval');
+        const threshold = policySettings?.approvalThreshold ?? 50;
         addLog(
           'Consequential Action Gated',
-          `Amount ($${amount}) exceeds auto-approval limit ($50.00). Escalate to Human Approver.`,
+          `Amount ($${amount}) exceeds auto-approval ceiling ($${threshold}.00). Escalate to Human Approver.`,
           'warning',
           evalData
         );
       } else if (evalData.disposition === 'PAUSE_REVIEW') {
         setVaultStatus('pause');
         addLog(
-          'Adversarial Injection Neutralized',
-          'TypeSafe Jev AI flagged adversarial injection pattern! Escalated to PAUSE_REVIEW.',
+          'Safety check needs a closer look',
+          'A safety signal was found, so this request was paused for human review.',
           'error',
           evalData
         );
@@ -225,9 +229,10 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
 
       // 5. Outcome
       if (opData.disposition === 'ALLOW') {
+        const isSandbox = opData.operation?.provider === 'paypal_sandbox' || activeProvider === 'paypal_sandbox';
         addLog(
-          'PayPal Sandbox Dispatched',
-          `Autonomous execution complete! PayPal Refund ID: ${opData.operation?.provider_refund_id || 'REF-MOCK-SUCCESS'}`,
+          isSandbox ? 'PayPal Sandbox rail executed' : 'Mock rail recorded the result',
+          `${isSandbox ? 'PayPal Sandbox' : 'Mock'} execution complete. Reference: ${opData.operation?.provider_refund_id || (isSandbox ? 'SANDBOX-DISPATCHED' : 'REF-MOCK-SUCCESS')}`,
           'success',
           opData
         );
@@ -267,16 +272,16 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-white">Autonomous Agentic Commerce Hub</h2>
+                <h2 className="text-lg font-black text-white">Agent demo</h2>
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase" style={{ background: `${C.teal}15`, color: C.teal, border: `1px solid ${C.teal}30` }}>
-                  AI Behind the Wheel
+                  Guided walkthrough
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded" style={{ background: C.s3, color: C.primary, border: `1px solid rgba(74,74,74,0.4)` }}>
                   MCP Protocol
                 </span>
               </div>
               <p className="text-xs mt-0.5" style={{ color: C.gray2 }}>
-                Autonomous AI agents interacting with PayPal Sandbox Rails under strict, non-bypassable Airlock security invariants.
+                Choose a scenario and follow how Airlock checks a refund request. This demo uses a mock payment rail.
               </p>
             </div>
           </div>
@@ -295,8 +300,8 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
               {isTourActive ? 'Running 30s Guided Tour...' : '▶ 30s Guided Judge Demo'}
             </button>
 
-            <span className="text-xs font-bold text-white flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: '#003087', border: '1px solid #0070BA' }}>
-              <Zap className="w-3.5 h-3.5 text-cyan-300" /> PayPal Sandbox (v2 Payments)
+            <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: '#172231', border: '1px solid rgba(148,163,184,0.2)' }}>
+              <Zap className="w-3.5 h-3.5 text-amber-300" /> Mock payment rail
             </span>
           </div>
         </div>
@@ -304,20 +309,20 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
         {/* Real-Time Impact & Test-Backed Telemetry */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-white/10">
           <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Benchmark Conformance</div>
-            <div className="text-base font-black text-emerald-400 font-mono mt-0.5">100 / 100 Passed</div>
+            <div className="text-[10px] uppercase font-bold text-gray-400">Decision checks</div>
+            <div className="text-sm font-bold text-emerald-300 mt-1">Policy rules + text scan</div>
           </div>
           <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Idempotent Deduplication</div>
-            <div className="text-base font-black text-cyan-400 font-mono mt-0.5">IDEMP-001 Active</div>
+            <div className="text-[10px] uppercase font-bold text-gray-400">Repeat requests</div>
+            <div className="text-sm font-bold text-cyan-300 mt-1">Duplicate check applied</div>
           </div>
           <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Dispute Double-Loss Shield</div>
-            <div className="text-base font-black text-rose-400 font-mono mt-0.5">Auto-Frozen (Rule)</div>
+            <div className="text-[10px] uppercase font-bold text-gray-400">Active disputes</div>
+            <div className="text-sm font-bold text-rose-300 mt-1">Refund can be held</div>
           </div>
           <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Benchmark Latency</div>
-            <div className="text-base font-black text-purple-400 font-mono mt-0.5">&lt; 1ms / Eval</div>
+            <div className="text-[10px] uppercase font-bold text-gray-400">When risk is unclear</div>
+            <div className="text-sm font-bold text-purple-300 mt-1">Pause for human review</div>
           </div>
         </div>
       </div>
@@ -378,7 +383,7 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
             <div className="flex items-center justify-between mt-3 pt-2" style={{ borderTop: `1px solid rgba(74,74,74,0.25)` }}>
               <div className="text-[10px] flex items-center gap-1" style={{ color: C.gray3 }}>
                 <Lock className="w-3 h-3 text-emerald-400" />
-                Guarded by <strong>8 Invariants</strong> & TypeSafe Jev AI
+                Checked by <strong>policy rules</strong> and text safety checks
               </div>
 
               <button
@@ -407,7 +412,7 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
               <div className="flex items-center gap-2">
                 <Terminal className="w-4 h-4" style={{ color: C.primary }} />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-white">
-                  Agent Chain-of-Thought & Airlock Security Rail Log
+                  Agent activity
                 </h3>
               </div>
               <span className="text-[10px] font-mono" style={{ color: C.gray3 }}>
@@ -465,8 +470,8 @@ export function AgenticCommerceView({ currentUser, onActionComplete }: AgenticCo
           <div className="glass-card rounded-2xl p-5 border relative overflow-hidden flex flex-col items-center justify-center" style={{ border: `1px solid rgba(74,74,74,0.4)` }}>
             <div className="w-full flex items-center justify-between pb-3 border-b border-white/10 mb-2">
               <div>
-                <h3 className="text-xs font-black text-white">3D Security Vault Enclave</h3>
-                <p className="text-[10px]" style={{ color: C.gray3 }}>Interactive WebGL Three.js Particle Shield</p>
+                <h3 className="text-xs font-black text-white">Decision status</h3>
+                <p className="text-[10px]" style={{ color: C.gray3 }}>Updates as the request moves through the checks</p>
               </div>
               <span
                 className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full uppercase"

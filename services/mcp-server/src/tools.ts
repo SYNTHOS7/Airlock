@@ -176,6 +176,9 @@ export class AirlockMcpTools {
           if (jevResponse.signals.explanation) {
             finalReasons.push(`Jev signal [${jevResponse.signals.route}]: ${jevResponse.signals.explanation}`);
           }
+        } else if (jevStatus !== 'ran' && finalDisposition === DispositionEnum.ALLOW) {
+          finalDisposition = DispositionEnum.REQUIRE_APPROVAL;
+          finalReasons.push(`Decision layer ${jevStatus}: failing safe to human approval.`);
         }
       } catch (err: any) {
         jevStatus = 'unavailable';

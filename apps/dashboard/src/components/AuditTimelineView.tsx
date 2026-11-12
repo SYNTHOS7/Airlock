@@ -12,23 +12,37 @@ const C = {
   gray2: '#B7B7B7', gray3: '#4A4A4A', s0: '#07090f', s1: '#0e1117', s2: '#151b26', s3: '#1c2333',
 };
 
-export function AuditTimelineView() {
+export function AuditTimelineView({ currentUserId }: { currentUserId: string }) {
   const [auditRows, setAuditRows] = useState<any[]>([]);
   const [loading, setLoading]     = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
+  async function handleVerifyOp(operationId: string) {
+    setVerifyingId(operationId);
+    try {
+      await fetch('/api/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-airlock-user': currentUserId },
+        body: JSON.stringify({ operation_id: operationId }),
+      });
+      await fetchAudit();
+    } catch {}
+    finally { setVerifyingId(null); }
+  }
 
   async function fetchAudit() {
     setLoading(true);
     try {
-      const res = await fetch('/api/audit');
+      const res = await fetch('/api/audit', { headers: { 'x-airlock-user': currentUserId } });
       const data = await res.json();
       setAuditRows(data.audit_log || []);
     } catch {}
     finally { setLoading(false); }
   }
 
-  useEffect(() => { fetchAudit(); }, []);
+  useEffect(() => { fetchAudit(); }, [currentUserId]);
 
   async function handleExportCompliance() {
     setExporting(true);
@@ -39,11 +53,11 @@ export function AuditTimelineView() {
     const approvedOps  = auditRows.filter(r => r.to_state === 'APPROVED').length;
     const completedOps = auditRows.filter(r => r.to_state === 'COMPLETED').length;
 
-    const dossier = `AIRLOCK COMPLIANCE DOSSIER
-==============================
+    const dossier = `AIRLOCK AUDIT & CONTROL ALIGNMENT DOSSIER
+=========================================
 Generated: ${new Date().toISOString()}
-System:    Airlock v1.0 — Zero-Trust Financial AI Safety Gateway
-Standard:  SOC2 Type II + PCI-DSS 4.0
+System:    Airlock Prototype — Financial AI Safety Gateway
+Status:    Informational Prototype Architecture Reference (Self-assessment; not an audited certification)
 
 EXECUTIVE SUMMARY
 -----------------
@@ -52,18 +66,21 @@ Operations Completed:  ${completedOps}
 Operations Denied:     ${deniedOps}
 Human Approvals Used:  ${approvedOps}
 
-SOC2 TRUST SERVICE CRITERIA
-----------------------------
-CC6.1  — Logical access controls: ENFORCED (role-based, 3 tiers)
-CC7.2  — System monitoring: ACTIVE (append-only WAL audit log)
-CC8.1  — Change management: ENFORCED (SHA-256 action hash)
-CC9.2  — Risk mitigation: ENFORCED (TypeSafe Jev adversarial scan)
+SECURITY CONTROL ALIGNMENT (Design Reference)
+---------------------------------------------
+Notice: The items below describe architectural design alignments to common standards.
+They do NOT constitute audited or certified compliance under SOC 2 Type II or PCI-DSS 4.0.
 
-PCI-DSS 4.0 REQUIREMENTS
--------------------------
-Req 7    — Restrict access by business need: ENFORCED (APPROVAL-002)
-Req 8    — Strong authentication: ENFORCED (dual-auth + action hash)
-Req 10   — Log and monitor all access: ENFORCED (append-only audit log)
+SOC 2 Trust Services Criteria Alignment:
+CC6.1  — Logical access controls: Role-based caller evaluation in policy engine
+CC7.2  — System monitoring: Append-only relational state transition log
+CC8.1  — Change management: SHA-256 action hash bound to approval
+CC9.2  — Risk mitigation: Advisory text safety scan with fail-safe degradation
+
+PCI-DSS 4.0 Requirements Alignment:
+Req 7  — Restrict access by business need: APPROVAL-002 separation of duties
+Req 8  — Identification & authentication: Server-side identity resolution & action fingerprinting
+Req 10 — Log and monitor all access: Append-only audit log with timestamped evidence
 
 FULL AUDIT LOG
 --------------
@@ -121,7 +138,7 @@ END OF DOSSIER
         <div>
           <h2 className="text-base font-black text-white">Audit & Evidence Timeline</h2>
           <p className="text-[11px] mt-0.5 font-medium" style={{ color: C.gray2 }}>
-            Append-only · All state transitions · Cryptographic evidence · SOC2 / PCI-DSS ready
+            Append-only · All state transitions · Cryptographic evidence · Control mapping reference
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -139,7 +156,7 @@ END OF DOSSIER
             ) : exporting ? (
               <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Generating…</>
             ) : (
-              <><Download className="w-3.5 h-3.5" /> Export SOC2/PCI Dossier</>
+              <><Download className="w-3.5 h-3.5" /> Export Audit Dossier</>
             )}
           </button>
           <button
@@ -211,7 +228,7 @@ END OF DOSSIER
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold"
                           style={{ background: `${C.teal}08`, border: `1px solid ${C.teal}25`, color: C.teal }}>
-                          <ShieldCheck className="w-3 h-3" /> Verified Record
+                          <ShieldCheck className="w-3 h-3" /> Audit Record
                         </span>
                       )}
                       <span className="text-[10px] font-mono" style={{ color: C.gray3 }}>
@@ -224,14 +241,26 @@ END OF DOSSIER
                   </div>
 
                   {/* State transition */}
-                  {(entry.from_state || entry.to_state) && (
-                    <div className="flex items-center gap-2 text-xs font-mono my-2 py-1.5 px-3 rounded-lg w-fit"
-                      style={{ background: C.s0, border: `1px solid rgba(74,74,74,0.3)` }}>
-                      <span style={{ color: C.gray3 }}>{entry.from_state || 'START'}</span>
-                      <ArrowRight className="w-3 h-3" style={{ color: C.gray3 }} />
-                      <span className="font-black" style={{ color: stateColor(entry.to_state) }}>{entry.to_state}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between gap-2 my-2 flex-wrap">
+                    {(entry.from_state || entry.to_state) && (
+                      <div className="flex items-center gap-2 text-xs font-mono py-1.5 px-3 rounded-lg w-fit"
+                        style={{ background: C.s0, border: `1px solid rgba(74,74,74,0.3)` }}>
+                        <span style={{ color: C.gray3 }}>{entry.from_state || 'START'}</span>
+                        <ArrowRight className="w-3 h-3" style={{ color: C.gray3 }} />
+                        <span className="font-black" style={{ color: stateColor(entry.to_state) }}>{entry.to_state}</span>
+                      </div>
+                    )}
+                    {entry.to_state === 'SUCCEEDED' && (
+                      <button
+                        onClick={() => handleVerifyOp(entry.operation_id)}
+                        disabled={verifyingId === entry.operation_id}
+                        className="text-[10px] font-bold px-2.5 py-1 rounded flex items-center gap-1 bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 transition disabled:opacity-50 cursor-pointer"
+                      >
+                        <ShieldCheck className="w-3 h-3" />
+                        {verifyingId === entry.operation_id ? 'Verifying with Rail...' : 'Verify on Provider Rail'}
+                      </button>
+                    )}
+                  </div>
 
                   {details && (
                     <div className="mt-2 terminal p-3 rounded-lg overflow-x-auto">

@@ -1,22 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getAirlock } from '@/lib/airlock';
-import { resolveUser } from '@airlock/mcp-server';
+import { requireRole, isUser } from '@/lib/api-auth';
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Server-side identity check — never trust body for approver identity/role
+    const userOrError = requireRole(req, 'approver');
+    if (!isUser(userOrError)) return userOrError;
+    const user = userOrError;
+
     const { id } = await params;
     const body = await req.json();
-    const userHeader = req.headers.get('x-airlock-user');
-    const authHeader = req.headers.get('authorization');
-    const user = resolveUser(userHeader, authHeader) || {
-      id: body.approver_id || 'approver_1',
-      name: 'Human Approver',
-      roles: ['approver' as const],
-      token: '',
-    };
 
     const { approvalService, executionService, repo } = getAirlock();
 
@@ -54,4 +51,3 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
-

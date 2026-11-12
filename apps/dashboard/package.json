@@ -14,6 +14,7 @@
     "@airlock/mcp-server": "*",
     "@airlock/policy-engine": "*",
     "@airlock/provider-mock": "*",
+    "@airlock/provider-paypal-sandbox": "*",
     "@airlock/storage": "*",
     "@types/three": "^0.187.0",
     "clsx": "^2.1.1",

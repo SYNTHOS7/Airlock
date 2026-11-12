@@ -1,29 +1,34 @@
 import { NextResponse } from 'next/server';
 import { getAirlock } from '@/lib/airlock';
-import { evaluate, loadPolicyFacts } from '@airlock/policy-engine';
+import { evaluate, loadPolicyFacts, JevClient, buildJevInput } from '@airlock/policy-engine';
 import { createMoney, type ActionRequest } from '@airlock/contracts';
-import { resolveUser } from '@airlock/mcp-server';
+import { DispositionEnum, mapJevSignalsToDisposition, mergeDispositions } from '@airlock/contracts';
+import { requireUser, isUser } from '@/lib/api-auth';
 
 export async function POST(req: Request) {
   try {
+    // Server-side identity — never fabricate from body
+    const userOrError = requireUser(req);
+    if (!isUser(userOrError)) return userOrError;
+    const user = userOrError;
+
     const body = await req.json();
-    const userHeader = req.headers.get('x-airlock-user');
-    const authHeader = req.headers.get('authorization');
-    const user = resolveUser(userHeader, authHeader) || {
-      id: body.requester_id || 'agent_1',
-      name: 'Support Agent',
-      roles: ['support_agent' as const],
-      token: '',
-    };
+
+    // Policy settings are strictly authoritative on the server.
+    // Callers cannot inject or weaken policy thresholds in request bodies.
+    if (
+      body.approval_threshold_minor != null ||
+      body.cumulative_cap_minor != null ||
+      body.velocity_max_count != null
+    ) {
+      return NextResponse.json(
+        { error: 'Security violation: Request body cannot override authoritative server policy invariants.' },
+        { status: 400 }
+      );
+    }
 
     const { repo, adapter, config } = getAirlock();
-
-    const activeConfig = {
-      ...config,
-      ...(body.approval_threshold_minor != null ? { approval_threshold_minor: body.approval_threshold_minor } : {}),
-      ...(body.cumulative_cap_minor != null ? { cumulative_cap_minor: body.cumulative_cap_minor } : {}),
-      ...(body.velocity_max_count != null ? { velocity_max_count: body.velocity_max_count } : {}),
-    };
+    const activeConfig = config;
 
     const amount = body.amount_minor != null ? createMoney(body.amount_minor / 100, body.currency || 'USD') : undefined;
 
@@ -45,13 +50,25 @@ export async function POST(req: Request) {
       caller_roles: user.roles,
     });
 
-    const result = evaluate(actionRequest, facts, activeConfig);
+    const policyResult = evaluate(actionRequest, facts, activeConfig);
+    const jevResult = await new JevClient().evaluateSignals(buildJevInput(actionRequest, facts));
+    let finalDisposition = policyResult.disposition;
+    const reasons = [...policyResult.reasons];
+    if (jevResult.signals) {
+      finalDisposition = mergeDispositions(finalDisposition, mapJevSignalsToDisposition(jevResult.signals));
+      if (jevResult.signals.explanation) reasons.push(`Decision layer: ${jevResult.signals.explanation}`);
+    } else if (jevResult.status !== 'ran' && finalDisposition === DispositionEnum.ALLOW) {
+      finalDisposition = DispositionEnum.REQUIRE_APPROVAL;
+      reasons.push(`Decision layer ${jevResult.status}: failing safe to human approval.`);
+    }
 
     return NextResponse.json({
-      disposition: result.disposition,
-      policyDisposition: result.policyDisposition,
-      ruleIds: result.ruleIds,
-      reasons: result.reasons,
+      disposition: finalDisposition,
+      provider: adapter.providerName,
+      policyDisposition: policyResult.disposition,
+      ruleIds: policyResult.ruleIds,
+      reasons,
+      decisionLayer: { status: jevResult.status, version: jevResult.version, latencyMs: jevResult.latencyMs },
       facts: {
         payment_capture_status: facts.payment_capture_status,
         remaining_refundable_amount: facts.remaining_refundable_amount,
@@ -63,4 +80,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
-
