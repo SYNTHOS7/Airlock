@@ -34,6 +34,11 @@ yarn-error.log*
 pnpm-debug.log*
 *.log
 
+# Video recordings (large binaries)
+recordings/raw/
+recordings/video/
+recordings/*.webm
+
 # OS & Editor
 .DS_Store
 Thumbs.db

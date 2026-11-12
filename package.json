@@ -22,6 +22,7 @@
     "benchmark:100": "tsx scripts/run-benchmark-100.ts"
   },
   "devDependencies": {
+    "playwright-core": "^1.65.0",
     "tsx": "^4.19.2",
     "vitest": "^3.0.4"
   },

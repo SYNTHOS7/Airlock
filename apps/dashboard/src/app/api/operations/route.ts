@@ -51,7 +51,8 @@ export async function POST(req: Request) {
     const { repo, adapter, config, approvalService } = getAirlock();
     const activeConfig = config;
 
-    const amount = body.amount_minor != null ? createMoney(body.amount_minor / 100, body.currency || 'USD') : undefined;
+    const rawMinor = body.amount_minor != null ? Number(body.amount_minor) : (body.amount != null ? Math.round(Number(body.amount) * 100) : undefined);
+    const amount = rawMinor != null ? createMoney(rawMinor / 100, body.currency || 'USD') : undefined;
 
     const actionRequest: ActionRequest = {
       request_id: body.request_id || `req_${Date.now()}`,
