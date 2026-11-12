@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Header, type UserContextValue, USERS } from '@/components/Header';
 import { AgenticCommerceView } from '@/components/AgenticCommerceView';
 import { NewRequestView } from '@/components/NewRequestView';
@@ -9,111 +9,106 @@ import { AuditTimelineView } from '@/components/AuditTimelineView';
 import { RedTeamView } from '@/components/RedTeamView';
 import { PolicyStudioView, type PolicyStudioSettings } from '@/components/PolicyStudioView';
 import { OverviewView } from '@/components/OverviewView';
-import { Bot, Bug, Clock, FilePlus2, History, House, ShieldCheck, SlidersHorizontal } from 'lucide-react';
+import type { DashboardOperation, PaymentProvider } from '@/lib/dashboard-display';
+import { AlertCircle, ArrowUpRight, Bot, Bug, Clock3, FilePlus2, History, House, RefreshCw, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 
-const C = {
-  primary: '#4F46E5', // Electric Indigo
-  teal:    '#06B6D4', // Cyber Cyan
-  orange:  '#D946EF', // Neon Magenta for review states
-  pink:    '#D946EF', // Neon Magenta
-  spark:   '#A5F3FC', // Highlight Spark
-  gold:    '#D946EF',
-  white:   '#FFFFFF',
-  gray3:   '#475569',
-  s0:      '#05050A', // Void Base
-};
 type TabId = 'overview' | 'agentic' | 'request' | 'queue' | 'audit' | 'redteam' | 'studio';
-type OverviewStats = { pending: number; review: number; completed: number };
-
-const TABS: { id: TabId; label: string; Icon: React.ElementType; color: string }[] = [
-  { id: 'overview', label: 'Overview', Icon: House, color: C.teal },
-  { id: 'request', label: 'Refund request', Icon: FilePlus2, color: C.primary },
-  { id: 'queue', label: 'Approvals', Icon: Clock, color: C.orange },
-  { id: 'audit', label: 'Activity & evidence', Icon: History, color: C.teal },
-  { id: 'redteam', label: 'Safety lab', Icon: Bug, color: C.pink },
-  { id: 'studio', label: 'Policy settings', Icon: SlidersHorizontal, color: C.primary },
-  { id: 'agentic', label: 'Agentic commerce', Icon: Bot, color: C.pink },
+const TABS = [
+  { id: 'overview' as const, label: 'Overview', Icon: House },
+  { id: 'request' as const, label: 'Refund request', Icon: FilePlus2 },
+  { id: 'queue' as const, label: 'Approvals', Icon: Clock3 },
+  { id: 'audit' as const, label: 'Activity & evidence', Icon: History },
+  { id: 'agentic' as const, label: 'Agent workspace', Icon: Bot },
+  { id: 'studio' as const, label: 'Policy settings', Icon: SlidersHorizontal },
+  { id: 'redteam' as const, label: 'Safety lab', Icon: Bug },
 ];
 
 export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<UserContextValue>(USERS[0]);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
-  const [overviewStats, setOverviewStats] = useState<OverviewStats>({ pending: 0, review: 0, completed: 0 });
+  const [operations, setOperations] = useState<DashboardOperation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [policySettings, setPolicySettings] = useState<PolicyStudioSettings>({ approvalThreshold: 50, cumulativeCap: 200, velocityLimit: 5, jevSensitivity: 'standard' });
-  const [activeProvider, setActiveProvider] = useState<'mock' | 'paypal_sandbox'>('mock');
+  const [activeProvider, setActiveProvider] = useState<PaymentProvider | null>(null);
+  const requestVersion = useRef(0);
 
-  async function updateOverviewStats() {
+  const refresh = useCallback(async () => {
+    const version = ++requestVersion.current;
+    setLoading(true);
     try {
-      const headers = { 'x-airlock-user': currentUser.id };
-      const [opsRes, approvalsRes] = await Promise.all([fetch('/api/operations', { headers }), fetch('/api/approvals', { headers })]);
-      const [opsData, approvalsData] = await Promise.all([opsRes.json(), approvalsRes.json()]);
-      const operations: any[] = opsData.operations || [];
-      const pending = approvalsData.approvals?.length || 0;
-      if (opsData.provider) setActiveProvider(opsData.provider);
-      setOverviewStats({ pending, review: operations.filter(op => op.state === 'NEEDS_REVIEW').length, completed: operations.filter(op => op.state === 'SUCCEEDED').length });
-    } catch { /* Keep the last known dashboard counts if the API is temporarily unavailable. */ }
-  }
+      const res = await fetch('/api/operations', { headers: { 'x-airlock-user': currentUser.id }, cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not load the workspace.');
+      if (!Array.isArray(data.operations) || !['mock', 'paypal_sandbox'].includes(data.provider)) throw new Error('The server returned an incomplete workspace response.');
+      if (version !== requestVersion.current) return;
+      setOperations(data.operations);
+      setActiveProvider(data.provider);
+      setError(null);
+      setLastUpdated(new Date());
+    } catch (err) {
+      if (version === requestVersion.current) setError(err instanceof Error ? err.message : 'Could not load the workspace.');
+    } finally {
+      if (version === requestVersion.current) setLoading(false);
+    }
+  }, [currentUser.id]);
 
   useEffect(() => {
-    void updateOverviewStats();
-    const interval = setInterval(() => void updateOverviewStats(), 10000);
-    return () => clearInterval(interval);
-  }, [currentUser]);
+    setOperations([]);
+    setActiveProvider(null);
+    setLastUpdated(null);
+    void refresh();
+    const interval = setInterval(() => void refresh(), 15000);
+    return () => { clearInterval(interval); requestVersion.current++; };
+  }, [refresh]);
+
+  const pending = operations.filter(op => op.state === 'AWAITING_APPROVAL').length;
+  const section = TABS.find(tab => tab.id === activeTab)!;
 
   return (
-    <div className="dashboard-shell min-h-screen flex flex-col" style={{ color: C.white }}>
-      <Header currentUser={currentUser} onUserChange={setCurrentUser} pendingApprovalsCount={overviewStats.pending} />
+    <div className="dashboard-shell">
+      <a href="#workspace-content" className="skip-link">Skip to workspace</a>
+      <Header currentUser={currentUser} onUserChange={setCurrentUser} pendingApprovalsCount={pending} />
       <div className="dashboard-workspace">
         <aside className="dashboard-sidebar" aria-label="Workspace navigation">
-          <div className="sidebar-section-label">Workspace</div>
-          <nav aria-label="Dashboard sections" role="tablist" className="dashboard-tabs">
-          {TABS.map(tab => {
-            const selected = activeTab === tab.id;
-            return (
-              <button key={tab.id} id={`tab-${tab.id}`} role="tab" aria-selected={selected} aria-controls="dashboard-panel"
-                onClick={() => setActiveTab(tab.id)}
-                className={`dashboard-tab flex items-center gap-2 px-3.5 py-2.5 text-sm font-semibold whitespace-nowrap ${selected ? 'is-active' : ''}`}>
-                <tab.Icon className="h-4 w-4" />{tab.label}
-                {tab.id === 'queue' && overviewStats.pending > 0 && <span className="tab-count min-w-5 rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold">{overviewStats.pending}</span>}
-              </button>
-            );
-          })}
+          <p className="sidebar-section-label">Operations</p>
+          <nav aria-label="Dashboard sections" className="dashboard-tabs">
+            {TABS.map((tab, index) => (
+              <React.Fragment key={tab.id}>
+                {index === 4 && <p className="sidebar-section-label sidebar-secondary-label">Control center</p>}
+                <button aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => setActiveTab(tab.id)} className={'dashboard-tab ' + (activeTab === tab.id ? 'is-active' : '')}>
+                  <tab.Icon size={17} strokeWidth={1.65} /><span>{tab.label}</span>
+                  {tab.id === 'queue' && pending > 0 && <span className="tab-count" title="Awaiting approval among the latest 50 requests">{pending}</span>}
+                </button>
+              </React.Fragment>
+            ))}
           </nav>
           <div className="sidebar-note">
-            <span className="sidebar-note-icon"><ShieldCheck className="h-4 w-4" /></span>
-            <div>
-              <p className="sidebar-note-title">Guardrails active</p>
-              <p className="sidebar-note-copy">Every refund is checked before it reaches the payment rail.</p>
-            </div>
+            <ShieldCheck size={19} strokeWidth={1.5} />
+            <p><strong>Policy before payment.</strong><span>Review the rules that govern each refund.</span></p>
+            <button aria-label="Open policy settings" onClick={() => setActiveTab('studio')}><ArrowUpRight size={16} /></button>
           </div>
+          <div className="sidebar-bottom"><span className="small-dot" />Demo workspace<span className="mono">v0.1</span></div>
         </aside>
-
-        <main id="dashboard-panel" role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="dashboard-main dashboard-panel">
-          {activeTab === 'overview' && <OverviewView counts={overviewStats} onNavigate={setActiveTab} activeProvider={activeProvider} />}
-          {activeTab === 'agentic' && <AgenticCommerceView currentUser={currentUser} onActionComplete={updateOverviewStats} policySettings={policySettings} activeProvider={activeProvider} />}
-          {activeTab === 'request' && <NewRequestView currentUser={currentUser} onActionComplete={updateOverviewStats} policySettings={policySettings} activeProvider={activeProvider} />}
-          {activeTab === 'queue' && <ApprovalQueueView currentUser={currentUser} onActionComplete={updateOverviewStats} />}
-          {activeTab === 'audit' && <AuditTimelineView currentUserId={currentUser.id} />}
-          {activeTab === 'redteam' && <RedTeamView currentUser={currentUser} />}
-          {activeTab === 'studio' && <PolicyStudioView settings={policySettings} onSettingsChange={setPolicySettings} currentUser={currentUser} />}
+        <main id="workspace-content" tabIndex={-1} className="dashboard-main">
+          <div className="workspace-breadcrumb"><span>Workspace</span><span>/</span><strong>{section.label}</strong><span className="workspace-updated">{error ? 'Connection needs attention' : lastUpdated ? 'Updated ' + lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Connecting'}</span></div>
+          {error && <div className="workspace-error" role="alert"><AlertCircle size={18} /><div><strong>Workspace could not refresh</strong><p>{error}{lastUpdated ? ' Showing the last received data.' : ''}</p></div><button onClick={() => void refresh()} disabled={loading}><RefreshCw size={14} />Retry</button></div>}
+          <div className={'dashboard-panel view-' + activeTab}>
+            {activeTab === 'overview' && <OverviewView operations={operations} onNavigate={setActiveTab} activeProvider={activeProvider} currentUser={currentUser} loading={loading} hasLoaded={!!lastUpdated} onRefresh={refresh} />}
+            {activeTab !== 'overview' && !activeProvider && <div className="panel-empty"><ShieldCheck size={28} /><h2>{loading ? 'Connecting to your workspace' : 'Workspace unavailable'}</h2><p>{loading ? 'Loading the configured payment provider.' : 'Retry the connection above to continue.'}</p></div>}
+            {activeProvider && <>
+              {activeTab === 'agentic' && <AgenticCommerceView currentUser={currentUser} onActionComplete={refresh} policySettings={policySettings} activeProvider={activeProvider} />}
+              {activeTab === 'request' && <NewRequestView currentUser={currentUser} onActionComplete={refresh} policySettings={policySettings} activeProvider={activeProvider} />}
+              {activeTab === 'queue' && <ApprovalQueueView currentUser={currentUser} onActionComplete={refresh} />}
+              {activeTab === 'audit' && <AuditTimelineView currentUserId={currentUser.id} />}
+              {activeTab === 'redteam' && <RedTeamView currentUser={currentUser} />}
+              {activeTab === 'studio' && <PolicyStudioView settings={policySettings} onSettingsChange={setPolicySettings} currentUser={currentUser} />}
+            </>}
+          </div>
+          <footer className="workspace-footer"><span>Airlock / Payment controls for agents</span><span className="rail-tag">{activeProvider === 'paypal_sandbox' ? 'PayPal Sandbox · Test funds' : activeProvider === 'mock' ? 'Mock provider · Simulated funds' : 'Provider not yet confirmed'}</span></footer>
         </main>
       </div>
-      <footer className="border-t border-slate-800/70 bg-slate-950/40 px-5 py-3">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-xs text-slate-500">
-          <span>Airlock demo environment</span>
-          <span className="flex items-center gap-2 font-semibold">
-            <span className="footer-rail-dot" />
-            Payment rail:
-            <span className={`rail-tag ${
-              activeProvider === 'paypal_sandbox'
-                ? 'rail-tag-paypal'
-                : 'rail-tag-mock'
-            }`}>
-              {activeProvider === 'paypal_sandbox' ? 'PayPal Sandbox / Test Mode' : 'Mock (Local In-Memory)'}
-            </span>
-          </span>
-        </div>
-      </footer>
     </div>
   );
 }

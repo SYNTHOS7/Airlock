@@ -18,7 +18,7 @@ const C = {
   white:   '#FFFFFF',
   gray1:   '#E2E8F0',
   gray2:   '#94A3B8',
-  gray3:   '#475569',
+  gray3:   '#77778C',
   s0: '#05050A',
   s1: '#0A0A12',
   s2: '#121220',
@@ -388,3 +388,4 @@ function AttackCard({ attack, result, onRun, currentUser }: {
     </div>
   );
 }
+

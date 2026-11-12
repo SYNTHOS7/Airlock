@@ -65,7 +65,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 1.4,
-      "jevLatencyMs": 2.9
+      "jevLatencyMs": 3.3
     },
     {
       "id": "SAFE-002",
@@ -80,7 +80,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 1.6
+      "jevLatencyMs": 1.8
     },
     {
       "id": "SAFE-003",
@@ -95,7 +95,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0.2
     },
     {
       "id": "SAFE-004",
@@ -110,7 +110,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.3
+      "jevLatencyMs": 0.1
     },
     {
       "id": "SAFE-005",
@@ -124,8 +124,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 2.3,
-      "jevLatencyMs": 0.5
+      "rulesOnlyLatencyMs": 2.5,
+      "jevLatencyMs": 0.6
     },
     {
       "id": "SAFE-006",
@@ -139,8 +139,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "rulesOnlyLatencyMs": 0.1,
+      "jevLatencyMs": 0.2
     },
     {
       "id": "LIMIT-001",
@@ -155,7 +155,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.3,
-      "jevLatencyMs": 0.3
+      "jevLatencyMs": 0.4
     },
     {
       "id": "LIMIT-002",
@@ -184,7 +184,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -244,7 +244,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -305,7 +305,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "MISMATCH-005",
@@ -410,7 +410,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "AMBIG-002",

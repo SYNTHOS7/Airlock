@@ -7,6 +7,7 @@ node_modules/
 dist/
 build/
 .next/
+.next-review/
 out/
 coverage/
 .turbo/
@@ -33,6 +34,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 *.log
+
+# Virtual environment
+.venv/
+venv/
+ENV/
 
 # Video recordings (large binaries)
 recordings/raw/

@@ -20,7 +20,7 @@ const C = {
   white:   '#FFFFFF',
   gray1:   '#E2E8F0',
   gray2:   '#94A3B8',
-  gray3:   '#475569',
+  gray3:   '#77778C',
   s0: '#05050A',
   s1: '#0A0A12',
   s2: '#121220',
@@ -31,7 +31,7 @@ const AGENT_PRESETS = [
   {
     id: 'safe_return',
     icon: '🛍️',
-    title: 'Autonomous Safe Return ($45)',
+    title: 'Standard return ($45)',
     subtitle: 'Standard e-commerce return policy',
     prompt: 'Customer Alice returned an unworn jacket (Capture #CAP-CLEAN-001). Under our 30-day return policy, issue a full refund of $45.00 USD to original payment method.',
     paymentId: 'CAP-CLEAN-001',
@@ -153,19 +153,19 @@ export function AgenticCommerceView({ currentUser, onActionComplete, policySetti
 
     try {
       // 1. Agent Natural Language Understanding
-      addLog('Agent Intent NLU', 'Analyzing merchant & customer natural language prompt...', 'pending');
+      addLog('Preset workflow', 'Using the selected example amount and capture; checking your request text...', 'pending');
       await delay(500);
 
       addLog(
-        'Agent Intent Extracted',
-        `Extracted Intent: REFUND $${amount} USD on PayPal Capture ${paymentId}`,
+        'Request prepared',
+        `Preset request: REFUND $${amount} USD on PayPal Capture ${paymentId}`,
         'success',
         { payment_id: paymentId, amount_minor: amountMinor, currency: 'USD', reason }
       );
       await delay(400);
 
       // 2. Autonomous MCP Tool Call
-      addLog('Airlock Gateway Intercept', 'Autonomous Agent invoking MCP tool: evaluate_action()...', 'pending');
+      addLog('Airlock Gateway Intercept', 'Checking preset request through the dashboard evaluation API...', 'pending');
       await delay(400);
 
       const res = await fetch('/api/evaluate', {
@@ -289,7 +289,7 @@ export function AgenticCommerceView({ currentUser, onActionComplete, policySetti
                   Guided walkthrough
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded" style={{ background: C.s3, color: C.primary, border: `1px solid rgba(74,74,74,0.4)` }}>
-                  MCP Protocol
+                  Preset workflow
                 </span>
               </div>
               <p className="text-xs mt-0.5" style={{ color: C.gray2 }}>
@@ -348,7 +348,7 @@ export function AgenticCommerceView({ currentUser, onActionComplete, policySetti
           {/* Preset Buttons */}
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: C.gray3 }}>
-              Select Autonomous Agent Scenario
+              Choose a workflow example
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {AGENT_PRESETS.map((preset) => {
@@ -406,12 +406,12 @@ export function AgenticCommerceView({ currentUser, onActionComplete, policySetti
                 {isRunning ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    Agent Reasoning...
+                    Running checks...
                   </>
                 ) : (
                   <>
                     <Send className="w-3.5 h-3.5" />
-                    Put Agent Behind the Wheel →
+                    Run workflow
                   </>
                 )}
               </button>
@@ -435,7 +435,7 @@ export function AgenticCommerceView({ currentUser, onActionComplete, policySetti
             {logs.length === 0 ? (
               <div className="p-8 text-center terminal rounded-xl">
                 <Bot className="w-8 h-8 mx-auto mb-2" style={{ color: C.gray3 }} />
-                <p className="text-xs" style={{ color: C.gray2 }}>Click "Put Agent Behind the Wheel" to execute autonomous financial reasoning.</p>
+                <p className="text-xs" style={{ color: C.gray2 }}>Run a preset request through policy and execution checks.</p>
               </div>
             ) : (
               <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
@@ -533,7 +533,7 @@ export function AgenticCommerceView({ currentUser, onActionComplete, policySetti
                 )}
                 <div className="text-sm font-black text-white">
                   {finalResult.disposition === 'ALLOW'
-                    ? 'Autonomous Payment Dispatched to PayPal'
+                    ? 'Request allowed by policy'
                     : finalResult.disposition === 'REQUIRE_APPROVAL'
                     ? 'Held for Cryptographic Dual-Approval'
                     : 'Transaction Blocked by Airlock Policy'}
@@ -553,4 +553,8 @@ export function AgenticCommerceView({ currentUser, onActionComplete, policySetti
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+
+
+
 

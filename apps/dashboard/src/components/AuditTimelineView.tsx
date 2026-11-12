@@ -18,7 +18,7 @@ const C = {
   white:   '#FFFFFF',
   gray1:   '#E2E8F0',
   gray2:   '#94A3B8',
-  gray3:   '#475569',
+  gray3:   '#77778C',
   s0: '#05050A',
   s1: '#0A0A12',
   s2: '#121220',
@@ -139,14 +139,9 @@ ${auditRows.map(r => {
   ].filter(Boolean).join('\n');
 }).join('\n\n')}
 
-POLICY ENGINE INVARIANTS
-------------------------
-LIMIT-001:    Per-tx cap $50 auto-approve threshold
-LIMIT-002:    Cumulative daily cap $200
-VELOCITY-001: Max 10 tx per 24h window
-APPROVAL-001: Consequential actions require human approval
-APPROVAL-002: Self-approval forbidden
-UNCERTAIN-001: TypeSafe adversarial uplift triggers PAUSE_REVIEW
+POLICY CONTEXT
+This export contains recorded events, not a snapshot of current policy limits.
+Consult each recorded decision and the server policy for its applicable settings.
 
 END OF DOSSIER
 ==============================
@@ -212,7 +207,12 @@ END OF DOSSIER
           hasEvidence = true;
           try {
             const d = JSON.parse(ev.details || '{}');
-            if (d.outcome === 'VERIFIED_SUCCESS') isVerified = true;
+            // Dispatch evidence also uses VERIFIED_SUCCESS in storage. Only a
+            // separate verification event can establish the verification badge.
+            if (typeof d.evidence_type === 'string' &&
+                (d.evidence_type.startsWith('verification_') || d.evidence_type === 'same_key_replay_reconciliation')) {
+              isVerified = d.outcome === 'VERIFIED_SUCCESS';
+            }
           } catch {}
         }
       }
@@ -337,7 +337,7 @@ END OF DOSSIER
             </span>
           </div>
           <p className="text-xs mt-1 font-medium" style={{ color: C.gray2 }}>
-            Cryptographically linked state transitions, automated policy decisions, and live payment rail proofs.
+            Request history, policy decisions, and recorded provider evidence. Verification is separate from execution.
           </p>
         </div>
 
@@ -378,7 +378,7 @@ END OF DOSSIER
           {[
             { label: 'Total Events',   value: stats.total,     color: C.primary, Icon: FileText,     sub: 'Ledger depth' },
             { label: 'Succeeded',      value: stats.succeeded, color: C.teal,    Icon: CheckCircle2, sub: 'Provider executed' },
-            { label: 'Evidence Proofs',value: stats.evidence,  color: C.spark,   Icon: ShieldCheck,  sub: 'Cryptographic' },
+            { label: 'Evidence Proofs',value: stats.evidence,  color: C.spark,   Icon: ShieldCheck,  sub: 'Recorded evidence' },
             { label: 'Denied / Blocked',value: stats.denied,   color: C.pink,    Icon: XCircle,      sub: 'Policy enforcement' },
             { label: 'Awaiting Signoff',value: stats.awaiting, color: C.orange,  Icon: Clock,        sub: 'Dual control' },
           ].map(stat => (
@@ -933,3 +933,5 @@ END OF DOSSIER
     </div>
   );
 }
+
+

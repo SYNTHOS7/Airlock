@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Optional isolated output for local QA when another process owns .next.
+  distDir: process.env.AIRLOCK_NEXT_DIST_DIR || '.next',
   reactStrictMode: true,
   transpilePackages: [
     '@airlock/contracts',

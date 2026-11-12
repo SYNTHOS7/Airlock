@@ -15,7 +15,7 @@ const C = {
   white:   '#FFFFFF',
   gray1:   '#E2E8F0',
   gray2:   '#94A3B8',
-  gray3:   '#475569',
+  gray3:   '#77778C',
   s0: '#05050A',
   s1: '#0A0A12',
   s2: '#121220',
@@ -30,17 +30,27 @@ interface ApprovalQueueViewProps {
 export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQueueViewProps) {
   const [approvals, setApprovals] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ id: string; success: boolean; message: string } | null>(null);
   const [mobileModalItem, setMobileModalItem] = useState<any | null>(null);
 
   async function fetchQueue() {
+    if (currentUser.role === 'support_agent') {
+      setApprovals([]);
+      setLoadError('Choose Manager Dave to review requests, or Auditor Emma to inspect the queue.');
+      return;
+    }
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch('/api/approvals', { headers: { 'x-airlock-user': currentUser.id } });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'The approval queue could not be loaded.');
       setApprovals(data.approvals || []);
-    } catch {}
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'The approval queue could not be loaded.');
+    }
     finally { setLoading(false); }
   }
 
@@ -77,9 +87,9 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-black text-white">Human Approval Queue</h2>
+          <h2 className="text-base font-black text-white">Approval queue</h2>
           <p className="text-[11px] mt-0.5 font-medium" style={{ color: C.gray2 }}>
-            Separation of Duties (APPROVAL-002) · SHA-256 cryptographic action-hash binding · Pre-execution policy recheck
+            Review requests before execution. Requesters cannot approve their own actions.
           </p>
         </div>
         <button
@@ -92,12 +102,13 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
         </button>
       </div>
 
+      {loadError && <div className="workspace-error" role="status"><AlertCircle size={16} /><span>{loadError}</span></div>}
       {/* How it works */}
       <div className="glass-card rounded-xl p-4" style={{ border: `1px solid rgba(74,74,74,0.4)` }}>
         <div className="flex items-center gap-0">
           {[
             { label: 'Agent Submits', sub: 'any user' },
-            { label: 'Policy Flags', sub: 'amount > $50' },
+            { label: 'Policy Flags', sub: 'configured limits' },
             { label: 'Hash Bound', sub: 'SHA-256 lock' },
             { label: 'Human Reviews', sub: 'different identity' },
             { label: 'Pre-check', sub: 'policy re-eval' },
@@ -119,14 +130,14 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
       </div>
 
       {/* Queue */}
-      {approvals.length === 0 ? (
+      {loadError ? null : loading ? <p role="status" className="text-sm text-slate-400">Loading approval requests...</p> : approvals.length === 0 ? (
         <div className="glass-card rounded-xl p-14 text-center border-dashed" style={{ borderColor: 'rgba(74,74,74,0.35)' }}>
           <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
             style={{ background: C.s3, border: `1px solid rgba(74,74,74,0.4)` }}>
             <UserCheck className="w-7 h-7" style={{ color: C.gray3 }} />
           </div>
           <p className="text-sm font-black" style={{ color: C.gray2 }}>Queue is empty</p>
-          <p className="text-xs mt-1" style={{ color: C.gray3 }}>Submit a request over $50 from the New Request tab to see it here</p>
+          <p className="text-xs mt-1" style={{ color: C.gray3 }}>Requests appear here when your configured policy requires approval.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -334,3 +345,5 @@ export function ApprovalQueueView({ currentUser, onActionComplete }: ApprovalQue
     </div>
   );
 }
+
+

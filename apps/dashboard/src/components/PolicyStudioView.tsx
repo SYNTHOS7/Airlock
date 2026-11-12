@@ -15,7 +15,7 @@ const C = {
   white:   '#FFFFFF',
   gray1:   '#E2E8F0',
   gray2:   '#94A3B8',
-  gray3:   '#475569',
+  gray3:   '#77778C',
   s0: '#05050A',
   s1: '#0A0A12',
   s2: '#121220',
@@ -140,16 +140,16 @@ export function PolicyStudioView({ settings, onSettingsChange, currentUser }: Po
         <div>
           <div className="flex items-center gap-2 mb-0.5">
             <SlidersHorizontal className="w-5 h-5" style={{ color: C.teal }} />
-            <h2 className="text-base font-black text-white">Interactive Policy Studio</h2>
+            <h2 className="text-base font-black text-white">Payment policy</h2>
           </div>
           <p className="text-[11px] font-medium" style={{ color: C.gray2 }}>
-            Adjust live financial safety thresholds · Applied in real-time across both New Request and Agentic Commerce flows
+            Save limits for refund requests and agent workflows. Demo settings reset on server restart.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleReset}
-            disabled={saving}
+            disabled={saving || currentUser.role !== 'approver'}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold glass-card hover-neon transition disabled:opacity-50"
             style={{ border: `1px solid rgba(74,74,74,0.4)`, color: C.gray2 }}
           >
@@ -158,12 +158,12 @@ export function PolicyStudioView({ settings, onSettingsChange, currentUser }: Po
           </button>
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || currentUser.role !== 'approver'}
             className="btn-primary flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-lg disabled:opacity-50"
           >
             {saving ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</> :
-             saved ? <><Check className="w-3.5 h-3.5" /> Invariants Active!</> :
-             <><Zap className="w-3.5 h-3.5" /> Apply Live Invariants</>}
+             saved ? <><Check className="w-3.5 h-3.5" /> Policy saved</> :
+             <><Zap className="w-3.5 h-3.5" /> Save policy</>}
           </button>
         </div>
       </div>
@@ -200,7 +200,7 @@ export function PolicyStudioView({ settings, onSettingsChange, currentUser }: Po
             </div>
           </div>
           <input
-            type="range"
+            type="range" disabled={currentUser.role !== 'approver'}
             min="10"
             max="200"
             step="5"
@@ -227,7 +227,7 @@ export function PolicyStudioView({ settings, onSettingsChange, currentUser }: Po
             </div>
           </div>
           <input
-            type="range"
+            type="range" disabled={currentUser.role !== 'approver'}
             min="50"
             max="1000"
             step="25"
@@ -254,7 +254,7 @@ export function PolicyStudioView({ settings, onSettingsChange, currentUser }: Po
             </div>
           </div>
           <input
-            type="range"
+            type="range" disabled={currentUser.role !== 'approver'}
             min="1"
             max="20"
             step="1"
@@ -323,10 +323,10 @@ export function PolicyStudioView({ settings, onSettingsChange, currentUser }: Po
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4" style={{ color: C.teal }} />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-white">Active Invariants Matrix (Zero-Trust Guardrails)</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white">Policy rules</h3>
           </div>
           <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full" style={{ background: `${C.teal}12`, border: `1px solid ${C.teal}30`, color: C.teal }}>
-            8/8 INVARIANTS ACTIVE
+            8 RULES
           </span>
         </div>
 
@@ -350,4 +350,7 @@ export function PolicyStudioView({ settings, onSettingsChange, currentUser }: Po
     </div>
   );
 }
+
+
+
 

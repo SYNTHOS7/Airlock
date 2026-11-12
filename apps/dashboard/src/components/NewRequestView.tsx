@@ -19,7 +19,7 @@ const C = {
   white:   '#FFFFFF',
   gray1:   '#E2E8F0',
   gray2:   '#94A3B8',
-  gray3:   '#475569',
+  gray3:   '#77778C',
   s0: '#05050A',
   s1: '#0A0A12',
   s2: '#121220',
@@ -42,7 +42,7 @@ const PRESETS = [
     id: 'clean',
     emoji: '✅',
     label: 'Clean Pass',
-    sublabel: '$45 — auto-approved',
+    sublabel: '$45 request',
     accent: C.teal,
     data: { paymentId: 'CAP-CLEAN-001', amount: '45.00', reason: 'Customer returned unused merchandise within 30-day return policy.' },
   },
@@ -50,7 +50,7 @@ const PRESETS = [
     id: 'approval',
     emoji: '⏳',
     label: 'Needs Approval',
-    sublabel: '$120 — escalated',
+    sublabel: '$120 request',
     accent: C.orange,
     data: { paymentId: 'CAP-LARGE-200', amount: '120.00', reason: 'Customer dispute on order quality. Reviewed and partial refund agreed.' },
   },
@@ -66,7 +66,7 @@ const PRESETS = [
     id: 'deny',
     emoji: '🚫',
     label: 'Policy Deny',
-    sublabel: 'Exceeds cap $200',
+    sublabel: '$350 request',
     accent: C.pink,
     data: { paymentId: 'CAP-DENY-001', amount: '350.00', reason: 'Full refund requested due to defective product.' },
   },
@@ -97,7 +97,7 @@ const STAGES = [
   { id: 'intake',    label: 'Intake',   icon: Package,      desc: 'Untrusted input' },
   { id: 'policy',   label: 'Policy',   icon: ShieldAlert,  desc: 'Rule evaluation' },
   { id: 'jev',      label: 'Text safety', icon: AlertCircle, desc: 'Local guard or fallback' },
-  { id: 'approval', label: 'Auth',     icon: CheckCircle2, desc: 'Dual-auth / SHA-256' },
+  { id: 'approval', label: 'Approval',     icon: CheckCircle2, desc: 'When required' },
   { id: 'execute',  label: 'Execute',  icon: Zap,          desc: 'WAL + provider' },
 ] as const;
 
@@ -227,7 +227,8 @@ export function NewRequestView({ currentUser, onActionComplete, policySettings, 
 
       {/* ── Preset Cards ─────────────────────────────────────────────── */}
       <div>
-        <SectionLabel text="Quick Scenarios (One-Click Testing)" />
+        <SectionLabel text="Example requests" />
+        <p className="text-xs mb-3" style={{ color: C.gray2 }}>Examples use mock capture IDs and default limits. For PayPal Sandbox, enter your own capture ID; the server policy decides the result.</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {PRESETS.map(preset => (
             <PresetCard
@@ -252,9 +253,9 @@ export function NewRequestView({ currentUser, onActionComplete, policySettings, 
 
         {/* Form */}
         <div className="lg:col-span-7 glass-card rounded-xl p-6 hover-neon transition-all">
-          <h2 className="text-base font-black text-white mb-0.5">New Refund Proposal</h2>
+          <h2 className="text-base font-black text-white mb-0.5">New refund request</h2>
           <p className="text-[11px] mb-5" style={{ color: C.gray2 }}>
-            Untrusted agent input → deterministic policy rules → local text-safety check → dual-auth → WAL execution
+            Enter a capture, amount, and reason. Check the policy before submitting.
           </p>
 
           {error && (
@@ -276,7 +277,7 @@ export function NewRequestView({ currentUser, onActionComplete, policySettings, 
               />
             </FormField>
 
-            <FormField label="Refund Amount (USD)" hint="Auto-approve ≤ $50 · Approval $50–$200 · Deny > $200">
+            <FormField label="Refund Amount (USD)" hint="Limits follow your current server policy.">
               <div className="relative">
                 <span className="absolute left-3 top-2 text-sm font-semibold" style={{ color: C.gray3 }}>$</span>
                 <input
@@ -301,7 +302,7 @@ export function NewRequestView({ currentUser, onActionComplete, policySettings, 
               />
             </FormField>
 
-            <div className="pt-1 flex items-center gap-3">
+            <div className="pt-1 flex flex-wrap items-center gap-3">
               <button
                 onClick={handleEvaluate} disabled={loading}
                 className="px-4 py-2 rounded-lg text-sm font-semibold transition"
@@ -309,7 +310,7 @@ export function NewRequestView({ currentUser, onActionComplete, policySettings, 
               >
                 {loading
                   ? <span className="flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Evaluating...</span>
-                  : 'Dry Run (Policy Only)'}
+                  : 'Check policy'}
               </button>
 
               <button
@@ -317,7 +318,7 @@ export function NewRequestView({ currentUser, onActionComplete, policySettings, 
                 className="btn-primary flex items-center gap-2 px-5 py-2 rounded-lg text-sm shadow-lg"
               >
                 <Send className="w-4 h-4" />
-                {loading ? 'Processing...' : 'Submit Action →'}
+                {loading ? 'Processing...' : 'Submit refund request'}
               </button>
             </div>
           </div>
@@ -353,7 +354,7 @@ function PresetCard({ preset, active, onClick }: { preset: typeof PRESETS[number
         boxShadow: active ? `0 0 16px ${preset.accent}25` : undefined,
       }}
     >
-      <div className="text-xl mb-1.5">{preset.emoji}</div>
+      <div className="mb-2" style={{ color: active ? preset.accent : C.gray2 }}><ShieldCheck size={17} strokeWidth={1.5} /></div>
       <div className="text-xs font-bold text-white leading-tight">{preset.label}</div>
       <div className="text-[10px] mt-0.5" style={{ color: C.gray3 }}>{preset.sublabel}</div>
     </button>
@@ -368,7 +369,7 @@ function PipelineVisualizer({ activeStage, completedStages, status }: {
   const statusMeta: Record<PipelineStatus, { label: string; color: string }> = {
     idle:             { label: 'Ready',                    color: C.gray3 },
     running:          { label: 'Processing…',              color: C.primary },
-    allow:            { label: '✓ AUTO-EXECUTED',          color: C.teal },
+    allow:            { label: 'Checks passed',          color: C.teal },
     require_approval: { label: '⏳ QUEUED FOR APPROVAL',   color: C.orange },
     deny:             { label: '🚫 BLOCKED BY POLICY',     color: C.pink },
   };
@@ -380,7 +381,7 @@ function PipelineVisualizer({ activeStage, completedStages, status }: {
         <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: C.gray3 }}>5-Stage Safety Pipeline</span>
         <span className="text-xs font-black" style={{ color: meta.color }}>{meta.label}</span>
       </div>
-      <div className="flex items-center">
+      <div className="grid grid-cols-5 gap-2">
         {STAGES.map((stage, i) => {
           const isActive = activeStage === stage.id;
           const isDone   = completedStages.has(stage.id);
@@ -405,11 +406,6 @@ function PipelineVisualizer({ activeStage, completedStages, status }: {
                 <div className="text-[9px] text-center px-1 leading-tight" style={{ color: C.gray3 }}>{stage.desc}</div>
               </div>
               {/* Connector */}
-              {i < STAGES.length - 1 && (
-                <div
-                  className={`pipeline-connector ${isDone && nextDone ? 'active' : ''}`}
-                />
-              )}
             </React.Fragment>
           );
         })}
@@ -751,3 +747,7 @@ export function DispositionBadge({ disposition }: { disposition: string }) {
 }
 
 function delay(ms: number) { return new Promise(r => setTimeout(r, ms)); }
+
+
+
+
