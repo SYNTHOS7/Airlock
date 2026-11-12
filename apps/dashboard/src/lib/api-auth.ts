@@ -12,21 +12,23 @@ function isDemoAuthAllowed(): { allowed: boolean; reason?: string } {
     return { allowed: false, reason: 'Demo authentication is explicitly disabled.' };
   }
 
-  // If in production, require explicit ENABLE_DEMO_AUTH=true
-  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEMO_AUTH !== 'true') {
-    return {
-      allowed: false,
-      reason: 'Demo authentication is disabled in production. Configure enterprise OIDC/OAuth2 authentication.',
-    };
-  }
-
   // Fail-safe: Demo authentication is permitted ONLY for mock or PayPal Sandbox demo modes.
   // It is strictly forbidden for live payments or production deployments.
   const provider = (process.env.PAYMENT_PROVIDER || 'mock').trim().toLowerCase();
-  if (provider !== 'mock' && provider !== 'paypal_sandbox') {
+  const isDemoProvider = provider === 'mock' || provider === 'paypal_sandbox';
+
+  if (!isDemoProvider) {
     return {
       allowed: false,
       reason: `Unsafe configuration: Demo authentication cannot be used with payment provider '${provider}'. Only 'mock' and 'paypal_sandbox' demo rails are supported.`,
+    };
+  }
+
+  // If in production without a demo provider or if explicitly disabled, reject
+  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEMO_AUTH === 'false') {
+    return {
+      allowed: false,
+      reason: 'Demo authentication is disabled in production. Configure enterprise OIDC/OAuth2 authentication.',
     };
   }
 
