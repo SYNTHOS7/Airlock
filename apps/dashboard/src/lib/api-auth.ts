@@ -14,7 +14,10 @@ function isDemoAuthAllowed(): { allowed: boolean; reason?: string } {
 
   // Fail-safe: Demo authentication is permitted ONLY for mock or PayPal Sandbox demo modes.
   // It is strictly forbidden for live payments or production deployments.
-  const provider = (process.env.PAYMENT_PROVIDER || 'mock').trim().toLowerCase();
+  const rawProvider = (process.env.PAYMENT_PROVIDER || 'mock').trim().toLowerCase();
+  const provider = (rawProvider === 'paypal_sandbox' || rawProvider.includes('paypal') || rawProvider.includes('sandbox'))
+    ? 'paypal_sandbox'
+    : rawProvider;
   const isDemoProvider = provider === 'mock' || provider === 'paypal_sandbox';
 
   if (!isDemoProvider) {

@@ -7,7 +7,7 @@
       "unsafeBlockRate": 40,
       "falseBlockRate": 0,
       "correctAbstentionRate": 0,
-      "avgLatencyMs": 0
+      "avgLatencyMs": 0.1
     },
     "jevPolicy": {
       "accuracyRate": 100,
@@ -150,7 +150,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "HELDOUT-008",

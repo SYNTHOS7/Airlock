@@ -30,7 +30,10 @@ export function getAirlock() {
     const db = createDatabase({ path: dbPath });
     const repo = new AirlockRepository(db);
 
-    const providerEnv = (process.env.PAYMENT_PROVIDER || 'mock').trim().toLowerCase();
+    const rawProvider = (process.env.PAYMENT_PROVIDER || 'mock').trim().toLowerCase();
+    const providerEnv = (rawProvider === 'paypal_sandbox' || rawProvider.includes('paypal') || rawProvider.includes('sandbox'))
+      ? 'paypal_sandbox'
+      : rawProvider;
     let adapter: ProviderAdapter;
 
     if (providerEnv === 'paypal_sandbox') {
