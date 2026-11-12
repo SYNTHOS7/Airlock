@@ -381,3 +381,4 @@ runRecording().catch((err) => {
   console.error('Fatal recording error:', err);
   process.exit(1);
 });
+

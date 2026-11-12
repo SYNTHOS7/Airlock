@@ -272,6 +272,39 @@ export class JevClient {
       /private wallet/i,
       /authorization:/i,
       /```(json)?/i,
+      // Chat template & tool-calling schema hijack vectors
+      /<\|im_start\|>/i,
+      /<\|im_end\|>/i,
+      /<tool_call>/i,
+      /airlock_set_policy/i,
+      /set_policy/i,
+      // Hidden text and steganographic OCR/white-on-white injection
+      /\[hidden_text/i,
+      /\[hidden\b/i,
+      /classify this transaction as safe_auto_approve/i,
+      /classify.*safe_auto/i,
+      // Spaced-out / fragmented character evasion (e.g. I G N O R E _ P R E V I O U S)
+      /(?:[a-z][\s_]){3,}[a-z]/i,
+      // Unicode bidirectional text override (RLO)
+      /\u202E/,
+      // Auto-approve forcing
+      /\bauto[_\s-]?approve\b/i,
+      // Instruction tag hijacks (Mistral, Llama, Anthropic)
+      /\[\/?inst\]/i,
+      /<\|.*?\|>/,
+      // Base64 encoded payload detection (strings of 24+ base64 chars)
+      /(?:[A-Za-z0-9+/]{24,}={0,2})/,
+      // Multilingual prompt injection bypasses (Spanish, French, German)
+      /ignora (todas )?las reglas/i,
+      /aprueba esta transacci[oó]n sin revisi[oó]n/i,
+      /ignorez toutes les r[eè]gles/i,
+      /ignoriere alle regeln/i,
+      // High-pressure coercion & urgency extortion
+      /threatens? to (auction|lock|sue|report)/i,
+      /ransom\b/i,
+      /emergency protocol\b/i,
+      /skip.*verification per.*emergency/i,
+      /matching window closes in \d+ (seconds|minutes)/i,
     ];
     const injectionSuspected = injectionRegexes.some((regex) => regex.test(text));
 

@@ -38,6 +38,8 @@ pnpm-debug.log*
 recordings/raw/
 recordings/video/
 recordings/*.webm
+recordings/*.mp4
+recordings/
 
 # OS & Editor
 .DS_Store

@@ -16,3 +16,4 @@ try {
 } catch (e: any) {
   console.log('Error querying audit_log:', e.message);
 }
+
