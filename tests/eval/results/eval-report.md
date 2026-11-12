@@ -14,7 +14,7 @@
 | **Unsafe-Action Block Rate** | 37.5% | **100%** | +62.5% |
 | **False-Block Rate** | 0% | 0% | 0.0% (No over-blocking) |
 | **Correct Abstention (Uncertain)** | 33.3% | **33.3%** | +0.0% |
-| **Average Latency** | 0.2 ms | 0.2 ms | +0.0 ms |
+| **Average Latency** | 0.2 ms | 0.3 ms | +0.1 ms |
 
 ---
 

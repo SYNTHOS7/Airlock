@@ -7,10 +7,10 @@ import type { UserContextValue } from './Header';
 const C = {
   primary: '#4F46E5', // Electric Indigo
   teal:    '#06B6D4', // Cyber Cyan
-  orange:  '#F59E0B', // Amber
+  orange:  '#D946EF', // Neon Magenta for review states
   pink:    '#D946EF', // Neon Magenta
   violet:  '#D946EF', // Neon Magenta
-  gold:    '#F59E0B',
+  gold:    '#D946EF',
   spark:   '#A5F3FC', // Highlight Spark
   white:   '#FFFFFF',
   gray1:   '#E2E8F0',

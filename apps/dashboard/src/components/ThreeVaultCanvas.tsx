@@ -43,13 +43,13 @@ export function ThreeVaultCanvas({ status = 'idle', height = 340, className = ''
       // Color uniforms matching status — Neural Mesh Palette
       // Default / Idle: Electric Indigo (#4F46E5) + Cyber Cyan (#06B6D4)
       // Allow: Cyber Cyan (#06B6D4) + Electric Indigo (#4F46E5)
-      // Require Approval: Amber (#F59E0B) + Highlight Spark (#A5F3FC)
+      // Require Approval: Neon Magenta (#D946EF) + Highlight Spark (#A5F3FC)
       // Deny: Neon Magenta (#D946EF) + Electric Indigo (#4F46E5)
       // Pause: Neon Magenta (#D946EF) + Highlight Spark (#A5F3FC)
       const colorScheme = {
         idle: { c1: new THREE.Color('#4F46E5'), c2: new THREE.Color('#06B6D4'), speed: 1.0 },
         allow: { c1: new THREE.Color('#06B6D4'), c2: new THREE.Color('#4F46E5'), speed: 1.2 },
-        require_approval: { c1: new THREE.Color('#F59E0B'), c2: new THREE.Color('#A5F3FC'), speed: 1.3 },
+        require_approval: { c1: new THREE.Color('#D946EF'), c2: new THREE.Color('#A5F3FC'), speed: 1.3 },
         deny: { c1: new THREE.Color('#D946EF'), c2: new THREE.Color('#4F46E5'), speed: 2.2 },
         pause: { c1: new THREE.Color('#D946EF'), c2: new THREE.Color('#A5F3FC'), speed: 1.6 },
       }[status] || { c1: new THREE.Color('#4F46E5'), c2: new THREE.Color('#06B6D4'), speed: 1.0 };

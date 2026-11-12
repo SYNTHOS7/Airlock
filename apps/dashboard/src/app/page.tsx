@@ -9,15 +9,15 @@ import { AuditTimelineView } from '@/components/AuditTimelineView';
 import { RedTeamView } from '@/components/RedTeamView';
 import { PolicyStudioView, type PolicyStudioSettings } from '@/components/PolicyStudioView';
 import { OverviewView } from '@/components/OverviewView';
-import { Bot, Bug, Clock, FilePlus2, History, House, SlidersHorizontal } from 'lucide-react';
+import { Bot, Bug, Clock, FilePlus2, History, House, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 
 const C = {
   primary: '#4F46E5', // Electric Indigo
   teal:    '#06B6D4', // Cyber Cyan
-  orange:  '#F59E0B', // Amber
+  orange:  '#D946EF', // Neon Magenta for review states
   pink:    '#D946EF', // Neon Magenta
   spark:   '#A5F3FC', // Highlight Spark
-  gold:    '#F59E0B',
+  gold:    '#D946EF',
   white:   '#FFFFFF',
   gray3:   '#475569',
   s0:      '#05050A', // Void Base
@@ -63,8 +63,10 @@ export default function DashboardPage() {
   return (
     <div className="dashboard-shell min-h-screen flex flex-col" style={{ color: C.white }}>
       <Header currentUser={currentUser} onUserChange={setCurrentUser} pendingApprovalsCount={overviewStats.pending} />
-      <main className="dashboard-main flex-1 max-w-7xl w-full mx-auto px-4 py-5 md:px-8 md:py-7">
-        <nav aria-label="Dashboard sections" role="tablist" className="dashboard-tabs mb-6 flex items-center gap-1 overflow-x-auto p-1.5">
+      <div className="dashboard-workspace">
+        <aside className="dashboard-sidebar" aria-label="Workspace navigation">
+          <div className="sidebar-section-label">Workspace</div>
+          <nav aria-label="Dashboard sections" role="tablist" className="dashboard-tabs">
           {TABS.map(tab => {
             const selected = activeTab === tab.id;
             return (
@@ -76,27 +78,36 @@ export default function DashboardPage() {
               </button>
             );
           })}
-        </nav>
+          </nav>
+          <div className="sidebar-note">
+            <span className="sidebar-note-icon"><ShieldCheck className="h-4 w-4" /></span>
+            <div>
+              <p className="sidebar-note-title">Guardrails active</p>
+              <p className="sidebar-note-copy">Every refund is checked before it reaches the payment rail.</p>
+            </div>
+          </div>
+        </aside>
 
-        <div id="dashboard-panel" role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="dashboard-panel">
-          {activeTab === 'overview' && <OverviewView counts={overviewStats} onNavigate={setActiveTab} />}
+        <main id="dashboard-panel" role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="dashboard-main dashboard-panel">
+          {activeTab === 'overview' && <OverviewView counts={overviewStats} onNavigate={setActiveTab} activeProvider={activeProvider} />}
           {activeTab === 'agentic' && <AgenticCommerceView currentUser={currentUser} onActionComplete={updateOverviewStats} policySettings={policySettings} activeProvider={activeProvider} />}
           {activeTab === 'request' && <NewRequestView currentUser={currentUser} onActionComplete={updateOverviewStats} policySettings={policySettings} activeProvider={activeProvider} />}
           {activeTab === 'queue' && <ApprovalQueueView currentUser={currentUser} onActionComplete={updateOverviewStats} />}
           {activeTab === 'audit' && <AuditTimelineView currentUserId={currentUser.id} />}
           {activeTab === 'redteam' && <RedTeamView currentUser={currentUser} />}
           {activeTab === 'studio' && <PolicyStudioView settings={policySettings} onSettingsChange={setPolicySettings} currentUser={currentUser} />}
-        </div>
-      </main>
+        </main>
+      </div>
       <footer className="border-t border-slate-800/70 bg-slate-950/40 px-5 py-3">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-xs text-slate-500">
           <span>Airlock demo environment</span>
-          <span className="flex items-center gap-1.5 font-semibold">
+          <span className="flex items-center gap-2 font-semibold">
+            <span className="footer-rail-dot" />
             Payment rail:
-            <span className={`px-2 py-0.5 rounded text-[11px] font-mono ${
+            <span className={`rail-tag ${
               activeProvider === 'paypal_sandbox'
-                ? 'bg-blue-950 text-blue-300 border border-blue-500/30'
-                : 'bg-slate-800 text-slate-300 border border-slate-700'
+                ? 'rail-tag-paypal'
+                : 'rail-tag-mock'
             }`}>
               {activeProvider === 'paypal_sandbox' ? 'PayPal Sandbox / Test Mode' : 'Mock (Local In-Memory)'}
             </span>
