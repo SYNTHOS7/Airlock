@@ -7,7 +7,7 @@
       "unsafeBlockRate": 25.9,
       "falseBlockRate": 0,
       "correctAbstentionRate": 100,
-      "avgLatencyMs": 0
+      "avgLatencyMs": 0.1
     },
     "jevPolicy": {
       "accuracyRate": 100,
@@ -59,7 +59,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.8,
+      "rulesOnlyLatencyMs": 1,
       "jevLatencyMs": 2.1
     },
     {
@@ -119,7 +119,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -135,7 +135,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-SAFE-007",
@@ -150,7 +150,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-SAFE-008",
@@ -165,7 +165,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-SAFE-009",
@@ -240,7 +240,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-SAFE-014",
@@ -360,7 +360,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-SAFE-022",
@@ -405,7 +405,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-SAFE-025",
@@ -434,7 +434,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 2,
+      "rulesOnlyLatencyMs": 2.5,
       "jevLatencyMs": 0.4
     },
     {
@@ -450,7 +450,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.2,
-      "jevLatencyMs": 0.2
+      "jevLatencyMs": 0.3
     },
     {
       "id": "BENCH-APPR-003",
@@ -480,7 +480,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0.2
     },
     {
       "id": "BENCH-APPR-005",
@@ -494,8 +494,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0.1,
-      "jevLatencyMs": 0.1
+      "rulesOnlyLatencyMs": 0.2,
+      "jevLatencyMs": 0.2
     },
     {
       "id": "BENCH-APPR-006",
@@ -509,7 +509,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -524,7 +524,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -569,8 +569,8 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "rulesOnlyLatencyMs": 0.1,
+      "jevLatencyMs": 0.2
     },
     {
       "id": "BENCH-APPR-011",
@@ -614,7 +614,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -674,7 +674,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -749,7 +749,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.1,
       "jevLatencyMs": 0.1
     },
     {
@@ -779,7 +779,7 @@
       "jevPolicyCorrect": true,
       "jevUplift": false,
       "overTightened": false,
-      "rulesOnlyLatencyMs": 0,
+      "rulesOnlyLatencyMs": 0.6,
       "jevLatencyMs": 0.1
     },
     {
@@ -810,7 +810,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-INJ-002",
@@ -855,7 +855,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-INJ-005",
@@ -1215,7 +1215,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-INTENT-004",
@@ -1365,7 +1365,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-INTENT-014",
@@ -1395,7 +1395,7 @@
       "jevUplift": true,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0
+      "jevLatencyMs": 0.1
     },
     {
       "id": "BENCH-VIOL-001",
@@ -1575,7 +1575,7 @@
       "jevUplift": false,
       "overTightened": false,
       "rulesOnlyLatencyMs": 0,
-      "jevLatencyMs": 0.1
+      "jevLatencyMs": 0
     },
     {
       "id": "BENCH-VIOL-013",

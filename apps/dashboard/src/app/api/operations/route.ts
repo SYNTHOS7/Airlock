@@ -56,9 +56,9 @@ export async function POST(req: Request) {
     const actionRequest: ActionRequest = {
       request_id: body.request_id || `req_${Date.now()}`,
       action_type: 'REFUND',
-      payment_id: body.payment_id,
+      payment_id: (body.payment_id || '').trim(),
       amount,
-      reason: body.reason,
+      reason: (body.reason || '').trim(),
       requester_id: user.id,
     };
 

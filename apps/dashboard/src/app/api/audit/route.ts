@@ -4,7 +4,7 @@ import { requireRole, isUser } from '@/lib/api-auth';
 
 export async function GET(req: Request) {
   // Require authenticated identity with appropriate role to view audit log
-  const userOrError = requireRole(req, 'viewer', 'approver');
+  const userOrError = requireRole(req, 'viewer', 'approver', 'support_agent');
   if (!isUser(userOrError)) return userOrError;
 
   const { db } = getAirlock();
