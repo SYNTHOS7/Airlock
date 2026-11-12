@@ -10,45 +10,51 @@ export default {
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
-        // ── Airlock Dynamic Palette ──────────────────────────────
-        primary:   { DEFAULT: '#4A90E2', light: '#6aaef5', dark: '#2d6fbe' },  // blue
-        teal:      { DEFAULT: '#50E3C2', light: '#7aedda', dark: '#28c9a6' },  // success / ALLOW
-        orange:    { DEFAULT: '#F5A623', light: '#f8be5e', dark: '#d4870a' },  // warning / APPROVAL
-        pink:      { DEFAULT: '#E94E77', light: '#f07898', dark: '#c82f58' },  // danger / DENY
-        violet:    { DEFAULT: '#9013FE', light: '#ae4ffe', dark: '#6c00cc' },  // PAUSE_REVIEW
-        gold:      { DEFAULT: '#F8E71C', light: '#fbf07a', dark: '#d4c400' },  // accent badge
+        // ── Neural Mesh Palette ──────────────────────────────────
+        primary:   { DEFAULT: '#4F46E5', light: '#6366F1', dark: '#3730A3' },  // Electric Indigo (primary actions/nav)
+        indigo:    { DEFAULT: '#4F46E5', light: '#6366F1', dark: '#3730A3' },  // Electric Indigo
+        teal:      { DEFAULT: '#06B6D4', light: '#22D3EE', dark: '#0891B2' },  // Cyber Cyan (success / ALLOW / verified)
+        cyan:      { DEFAULT: '#06B6D4', light: '#22D3EE', dark: '#0891B2' },  // Cyber Cyan
+        pink:      { DEFAULT: '#D946EF', light: '#E879F9', dark: '#C026D3' },  // Neon Magenta (AI & elevated risk / DENY)
+        magenta:   { DEFAULT: '#D946EF', light: '#E879F9', dark: '#C026D3' },  // Neon Magenta
+        violet:    { DEFAULT: '#D946EF', light: '#E879F9', dark: '#C026D3' },  // Neon Magenta (PAUSE_REVIEW)
+        spark:     { DEFAULT: '#A5F3FC', light: '#CFFAFE', dark: '#67E8F9' },  // Highlight Spark (focus rings / highlights)
+        orange:    { DEFAULT: '#F59E0B', light: '#FBBF24', dark: '#D97706' },  // Amber (warning / APPROVAL)
+        gold:      { DEFAULT: '#F59E0B', light: '#FBBF24', dark: '#D97706' },  // Accent badge
         // ── Neutrals ─────────────────────────────────────────────
         ink: {
           50:  '#FFFFFF',
-          100: '#D1D1D1',
-          200: '#B7B7B7',
-          400: '#4A4A4A',
-          600: '#2a2a2a',
-          800: '#141414',
-          900: '#0a0a0a',
+          100: '#E2E8F0',
+          200: '#94A3B8',
+          400: '#475569',
+          600: '#334155',
+          800: '#1E293B',
+          900: '#0F172A',
         },
-        // ── Surface layers ────────────────────────────────────────
+        // ── Surface layers (Void Base) ────────────────────────────
         surface: {
-          0:   '#07090f',
-          1:   '#0e1117',
-          2:   '#151b26',
-          3:   '#1c2333',
-          4:   '#232b3e',
+          0:   '#05050A',
+          1:   '#0A0A12',
+          2:   '#121220',
+          3:   '#1A1A2E',
+          4:   '#22223C',
         },
       },
       fontFamily: {
         mono: ['Cascadia Code', 'Fira Code', 'Consolas', 'monospace'],
       },
       boxShadow: {
-        'glow-primary': '0 0 20px rgba(74,144,226,0.4)',
-        'glow-teal':    '0 0 16px rgba(80,227,194,0.35)',
-        'glow-orange':  '0 0 16px rgba(245,166,35,0.35)',
-        'glow-pink':    '0 0 16px rgba(233,78,119,0.35)',
-        'glow-violet':  '0 0 16px rgba(144,19,254,0.35)',
+        'glow-primary': '0 0 20px rgba(79,70,229,0.35)',
+        'glow-teal':    '0 0 16px rgba(6,182,212,0.35)',
+        'glow-cyan':    '0 0 16px rgba(6,182,212,0.35)',
+        'glow-orange':  '0 0 16px rgba(245,158,11,0.35)',
+        'glow-pink':    '0 0 16px rgba(217,70,239,0.35)',
+        'glow-violet':  '0 0 16px rgba(217,70,239,0.35)',
+        'glow-spark':   '0 0 12px rgba(165,243,252,0.4)',
       },
       backgroundImage: {
-        'gradient-brand': 'linear-gradient(135deg, #4A90E2 0%, #9013FE 100%)',
-        'gradient-teal':  'linear-gradient(135deg, #50E3C2 0%, #4A90E2 100%)',
+        'gradient-brand': 'linear-gradient(135deg, #4F46E5 0%, #D946EF 100%)',
+        'gradient-teal':  'linear-gradient(135deg, #06B6D4 0%, #4F46E5 100%)',
       },
     },
   },

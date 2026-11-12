@@ -11,7 +11,17 @@ import { PolicyStudioView, type PolicyStudioSettings } from '@/components/Policy
 import { OverviewView } from '@/components/OverviewView';
 import { Bot, Bug, Clock, FilePlus2, History, House, SlidersHorizontal } from 'lucide-react';
 
-const C = { primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77', gold: '#F8E71C', white: '#FFFFFF', gray3: '#4A4A4A', s0: '#07090f' };
+const C = {
+  primary: '#4F46E5', // Electric Indigo
+  teal:    '#06B6D4', // Cyber Cyan
+  orange:  '#F59E0B', // Amber
+  pink:    '#D946EF', // Neon Magenta
+  spark:   '#A5F3FC', // Highlight Spark
+  gold:    '#F59E0B',
+  white:   '#FFFFFF',
+  gray3:   '#475569',
+  s0:      '#05050A', // Void Base
+};
 type TabId = 'overview' | 'agentic' | 'request' | 'queue' | 'audit' | 'redteam' | 'studio';
 type OverviewStats = { pending: number; review: number; completed: number };
 
@@ -19,10 +29,10 @@ const TABS: { id: TabId; label: string; Icon: React.ElementType; color: string }
   { id: 'overview', label: 'Overview', Icon: House, color: C.teal },
   { id: 'request', label: 'Refund request', Icon: FilePlus2, color: C.primary },
   { id: 'queue', label: 'Approvals', Icon: Clock, color: C.orange },
-  { id: 'audit', label: 'Activity & evidence', Icon: History, color: C.primary },
+  { id: 'audit', label: 'Activity & evidence', Icon: History, color: C.teal },
   { id: 'redteam', label: 'Safety lab', Icon: Bug, color: C.pink },
-  { id: 'studio', label: 'Policy settings', Icon: SlidersHorizontal, color: C.gold },
-  { id: 'agentic', label: 'Agentic commerce', Icon: Bot, color: C.teal },
+  { id: 'studio', label: 'Policy settings', Icon: SlidersHorizontal, color: C.primary },
+  { id: 'agentic', label: 'Agentic commerce', Icon: Bot, color: C.pink },
 ];
 
 export default function DashboardPage() {

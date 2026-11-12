@@ -5,9 +5,21 @@ import { UserCheck, ShieldAlert, Check, X, Clock, RefreshCw, AlertCircle, Hash, 
 import type { UserContextValue } from './Header';
 
 const C = {
-  primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77',
-  violet: '#9013FE', gold: '#F8E71C', white: '#FFFFFF', gray1: '#D1D1D1',
-  gray2: '#B7B7B7', gray3: '#4A4A4A', s0: '#07090f', s1: '#0e1117', s2: '#151b26', s3: '#1c2333',
+  primary: '#4F46E5', // Electric Indigo
+  teal:    '#06B6D4', // Cyber Cyan
+  orange:  '#F59E0B', // Amber
+  pink:    '#D946EF', // Neon Magenta
+  violet:  '#D946EF', // Neon Magenta
+  gold:    '#F59E0B',
+  spark:   '#A5F3FC', // Highlight Spark
+  white:   '#FFFFFF',
+  gray1:   '#E2E8F0',
+  gray2:   '#94A3B8',
+  gray3:   '#475569',
+  s0: '#05050A',
+  s1: '#0A0A12',
+  s2: '#121220',
+  s3: '#1A1A2E',
 };
 
 interface ApprovalQueueViewProps {

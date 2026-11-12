@@ -7,9 +7,21 @@ import {
 } from 'lucide-react';
 
 const C = {
-  primary: '#4A90E2', teal: '#50E3C2', orange: '#F5A623', pink: '#E94E77',
-  violet: '#9013FE', gold: '#F8E71C', white: '#FFFFFF', gray1: '#D1D1D1',
-  gray2: '#B7B7B7', gray3: '#4A4A4A', s0: '#07090f', s1: '#0e1117', s2: '#151b26', s3: '#1c2333',
+  primary: '#4F46E5', // Electric Indigo
+  teal:    '#06B6D4', // Cyber Cyan
+  orange:  '#F59E0B', // Amber
+  pink:    '#D946EF', // Neon Magenta
+  violet:  '#D946EF', // Neon Magenta
+  gold:    '#F59E0B',
+  spark:   '#A5F3FC', // Highlight Spark
+  white:   '#FFFFFF',
+  gray1:   '#E2E8F0',
+  gray2:   '#94A3B8',
+  gray3:   '#475569',
+  s0: '#05050A',
+  s1: '#0A0A12',
+  s2: '#121220',
+  s3: '#1A1A2E',
 };
 
 export function AuditTimelineView({ currentUserId }: { currentUserId: string }) {
@@ -18,18 +30,28 @@ export function AuditTimelineView({ currentUserId }: { currentUserId: string }) 
   const [exporting, setExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [verifyStatus, setVerifyStatus] = useState<Record<string, { outcome?: string; status?: string; error?: string; reason?: string }>>({});
 
   async function handleVerifyOp(operationId: string) {
     setVerifyingId(operationId);
     try {
-      await fetch('/api/verify', {
+      const res = await fetch('/api/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-airlock-user': currentUserId },
         body: JSON.stringify({ operation_id: operationId }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setVerifyStatus((prev) => ({ ...prev, [operationId]: { error: data.error || `HTTP ${res.status}` } }));
+      } else {
+        setVerifyStatus((prev) => ({ ...prev, [operationId]: data.verification || data }));
+      }
       await fetchAudit();
-    } catch {}
-    finally { setVerifyingId(null); }
+    } catch (e: any) {
+      setVerifyStatus((prev) => ({ ...prev, [operationId]: { error: e.message || 'Verification request failed' } }));
+    } finally {
+      setVerifyingId(null);
+    }
   }
 
   async function fetchAudit() {
@@ -250,16 +272,59 @@ END OF DOSSIER
                         <span className="font-black" style={{ color: stateColor(entry.to_state) }}>{entry.to_state}</span>
                       </div>
                     )}
-                    {entry.to_state === 'SUCCEEDED' && (
-                      <button
-                        onClick={() => handleVerifyOp(entry.operation_id)}
-                        disabled={verifyingId === entry.operation_id}
-                        className="text-[10px] font-bold px-2.5 py-1 rounded flex items-center gap-1 bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 transition disabled:opacity-50 cursor-pointer"
-                      >
-                        <ShieldCheck className="w-3 h-3" />
-                        {verifyingId === entry.operation_id ? 'Verifying with Rail...' : 'Verify on Provider Rail'}
-                      </button>
-                    )}
+                    {entry.to_state === 'SUCCEEDED' && (() => {
+                      const v = verifyStatus[entry.operation_id];
+                      const isSuccess = v?.outcome === 'VERIFIED_SUCCESS';
+                      const isFailure = v?.outcome === 'VERIFIED_FAILURE';
+                      const isUnresolved = v?.outcome === 'UNRESOLVED';
+                      const isError = !!v?.error;
+
+                      return (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isSuccess && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-cyan-950/80 text-cyan-300 border border-cyan-500/40">
+                              <ShieldCheck className="w-3 h-3 text-cyan-400" /> Provider verified
+                            </span>
+                          )}
+                          {isFailure && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-500/40" title={v?.reason}>
+                              <XCircle className="w-3 h-3 text-fuchsia-400" /> Provider Confirmed Failure
+                            </span>
+                          )}
+                          {isUnresolved && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-amber-950/80 text-amber-300 border border-amber-500/40" title={v?.reason}>
+                              <Clock className="w-3 h-3 text-amber-400" /> Inconclusive / Unresolved
+                            </span>
+                          )}
+                          {isError && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-pink-950/80 text-pink-300 border border-pink-500/40" title={v?.error}>
+                              <Bug className="w-3 h-3 text-pink-400" /> {v?.error}
+                            </span>
+                          )}
+
+                          <button
+                            onClick={() => handleVerifyOp(entry.operation_id)}
+                            disabled={verifyingId === entry.operation_id || isSuccess}
+                            className={`text-[10px] font-bold px-2.5 py-1 rounded flex items-center gap-1 border transition ${
+                              isSuccess
+                                ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 cursor-default opacity-60'
+                                : isFailure || isUnresolved || isError
+                                  ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border-indigo-500/50 cursor-pointer'
+                                  : 'bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border-cyan-500/30 cursor-pointer'
+                            }`}
+                          >
+                            <ShieldCheck className="w-3 h-3" />
+                            {verifyingId === entry.operation_id
+                              ? 'Verifying with Rail...'
+                              : isSuccess
+                                ? 'Verified ✓'
+                                : (isFailure || isUnresolved || isError)
+                                  ? 'Retry Verification'
+                                  : 'Verify on Provider Rail'}
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {details && (

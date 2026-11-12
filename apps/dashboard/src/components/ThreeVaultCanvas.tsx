@@ -40,18 +40,19 @@ export function ThreeVaultCanvas({ status = 'idle', height = 340, className = ''
       camera = new THREE.PerspectiveCamera(45, width / heightPx, 0.1, 100);
       camera.position.z = 4.2;
 
-      // Color uniforms matching status
-      // Default / Idle: Teal (#50E3C2) + Brand Blue (#4A90E2)
-      // Deny: Pink/Crimson (#E94E77)
-      // Require: Orange (#F5A623)
-      // Pause: Violet (#9013FE)
+      // Color uniforms matching status — Neural Mesh Palette
+      // Default / Idle: Electric Indigo (#4F46E5) + Cyber Cyan (#06B6D4)
+      // Allow: Cyber Cyan (#06B6D4) + Electric Indigo (#4F46E5)
+      // Require Approval: Amber (#F59E0B) + Highlight Spark (#A5F3FC)
+      // Deny: Neon Magenta (#D946EF) + Electric Indigo (#4F46E5)
+      // Pause: Neon Magenta (#D946EF) + Highlight Spark (#A5F3FC)
       const colorScheme = {
-        idle: { c1: new THREE.Color('#4A90E2'), c2: new THREE.Color('#50E3C2'), speed: 1.0 },
-        allow: { c1: new THREE.Color('#50E3C2'), c2: new THREE.Color('#4A90E2'), speed: 1.2 },
-        require_approval: { c1: new THREE.Color('#F5A623'), c2: new THREE.Color('#F8E71C'), speed: 1.3 },
-        deny: { c1: new THREE.Color('#E94E77'), c2: new THREE.Color('#9013FE'), speed: 2.2 },
-        pause: { c1: new THREE.Color('#9013FE'), c2: new THREE.Color('#E94E77'), speed: 1.6 },
-      }[status] || { c1: new THREE.Color('#4A90E2'), c2: new THREE.Color('#50E3C2'), speed: 1.0 };
+        idle: { c1: new THREE.Color('#4F46E5'), c2: new THREE.Color('#06B6D4'), speed: 1.0 },
+        allow: { c1: new THREE.Color('#06B6D4'), c2: new THREE.Color('#4F46E5'), speed: 1.2 },
+        require_approval: { c1: new THREE.Color('#F59E0B'), c2: new THREE.Color('#A5F3FC'), speed: 1.3 },
+        deny: { c1: new THREE.Color('#D946EF'), c2: new THREE.Color('#4F46E5'), speed: 2.2 },
+        pause: { c1: new THREE.Color('#D946EF'), c2: new THREE.Color('#A5F3FC'), speed: 1.6 },
+      }[status] || { c1: new THREE.Color('#4F46E5'), c2: new THREE.Color('#06B6D4'), speed: 1.0 };
 
       mat = new THREE.ShaderMaterial({
         uniforms: {

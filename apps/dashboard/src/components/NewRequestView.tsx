@@ -7,23 +7,24 @@ import {
 } from 'lucide-react';
 import type { UserContextValue } from './Header';
 
-// ── Palette ──────────────────────────────────────────────────────────────────
+// ── Palette — Neural Mesh ────────────────────────────────────────────────────
 const C = {
-  primary: '#4A90E2',
-  teal:    '#50E3C2',
-  orange:  '#F5A623',
-  pink:    '#E94E77',
-  violet:  '#9013FE',
-  gold:    '#F8E71C',
+  primary: '#4F46E5', // Electric Indigo
+  teal:    '#06B6D4', // Cyber Cyan
+  orange:  '#F59E0B', // Amber
+  pink:    '#D946EF', // Neon Magenta
+  violet:  '#D946EF', // Neon Magenta
+  gold:    '#F59E0B',
+  spark:   '#A5F3FC', // Highlight Spark
   white:   '#FFFFFF',
-  gray1:   '#D1D1D1',
-  gray2:   '#B7B7B7',
-  gray3:   '#4A4A4A',
-  s0: '#07090f',
-  s1: '#0e1117',
-  s2: '#151b26',
-  s3: '#1c2333',
-  s4: '#232b3e',
+  gray1:   '#E2E8F0',
+  gray2:   '#94A3B8',
+  gray3:   '#475569',
+  s0: '#05050A',
+  s1: '#0A0A12',
+  s2: '#121220',
+  s3: '#1A1A2E',
+  s4: '#22223C',
 };
 
 import type { PolicyStudioSettings } from './PolicyStudioView';
@@ -500,20 +501,29 @@ function EvalCard({ result }: { result: any }) {
 function SubmitCard({ result, currentUser, activeProvider }: { result: any; currentUser?: UserContextValue; activeProvider?: 'mock' | 'paypal_sandbox' }) {
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   async function handleVerify() {
     if (!result.operation?.operation_id) return;
     setVerifying(true);
+    setVerificationError(null);
     try {
       const res = await fetch('/api/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-airlock-user': currentUser?.id || 'viewer_1' },
+        headers: { 'Content-Type': 'application/json', 'x-airlock-user': currentUser?.id || '' },
         body: JSON.stringify({ operation_id: result.operation.operation_id }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setVerificationError(data.error || `HTTP ${res.status}: Verification failed`);
+        setVerificationResult(null);
+        return;
+      }
       setVerificationResult(data.verification || data);
+      setVerificationError(null);
     } catch (e: any) {
-      setVerificationResult({ outcome: 'ERROR', reason: e.message });
+      setVerificationError(e.message || 'Network error during verification');
+      setVerificationResult(null);
     } finally {
       setVerifying(false);
     }
@@ -521,6 +531,8 @@ function SubmitCard({ result, currentUser, activeProvider }: { result: any; curr
 
   const opProvider = result.operation?.provider || activeProvider || 'mock';
   const isSandbox = opProvider === 'paypal_sandbox';
+  const isVerifiedSuccess = verificationResult?.outcome === 'VERIFIED_SUCCESS';
+  const canRetry = !verifying && !isVerifiedSuccess && (!!verificationResult || !!verificationError);
 
   if (result.disposition === 'ALLOW') return (
     <div className="glass-card rounded-xl p-5 animate-count-up"
@@ -531,43 +543,111 @@ function SubmitCard({ result, currentUser, activeProvider }: { result: any; curr
           <span className="font-black text-sm" style={{ color: C.teal }}>Executed</span>
         </div>
         <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-          isSandbox ? 'bg-blue-950 text-blue-300 border border-blue-500/30' : 'bg-slate-800 text-slate-300 border border-slate-700'
+          isSandbox ? 'bg-indigo-950 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-300 border border-slate-700'
         }`}>
           {isSandbox ? 'PAYPAL SANDBOX' : 'MOCK RAIL'}
         </span>
       </div>
-      <div className="p-2.5 rounded-lg bg-teal-950/30 border border-teal-500/20 text-xs mb-2">
-        <strong className="text-teal-300">Next Action: </strong>
+      <div className="p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-500/20 text-xs mb-2">
+        <strong className="text-cyan-300">Next Action: </strong>
         <span className="text-slate-200">Execution complete. Dispatched to {isSandbox ? 'PayPal Sandbox / Test Mode' : 'Mock'} payment rail and committed to append-only audit log. Use &quot;Verify Outcome&quot; below to confirm provider state.</span>
       </div>
       <div className="text-xs space-y-1" style={{ color: C.gray1 }}>
         <div>Operation ID: <code className="font-mono text-white">{result.operation?.operation_id?.slice(0, 16)}...</code></div>
         {result.operation?.provider_refund_id && (
-          <div>Refund Reference: <code className="font-mono font-bold text-teal-300">{result.operation.provider_refund_id}</code></div>
+          <div>Refund Reference: <code className="font-mono font-bold text-cyan-300">{result.operation.provider_refund_id}</code></div>
         )}
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-slate-700/40">
         <button
           onClick={handleVerify}
-          disabled={verifying || !!verificationResult}
-          className="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/40 disabled:opacity-50"
+          disabled={verifying || isVerifiedSuccess}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border disabled:opacity-50 ${
+            isVerifiedSuccess
+              ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 cursor-default'
+              : canRetry
+                ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border-indigo-500/50 cursor-pointer'
+                : 'bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border-cyan-500/40 cursor-pointer'
+          }`}
         >
-          {verifying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-          {verificationResult ? 'Verification Recorded' : 'Verify Outcome on Provider'}
+          {verifying ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : isVerifiedSuccess ? (
+            <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+          ) : (
+            <ShieldCheck className="w-3.5 h-3.5" />
+          )}
+          {isVerifiedSuccess
+            ? 'Provider Verified ✓'
+            : verifying
+              ? 'Verifying with Rail...'
+              : canRetry
+                ? 'Retry Verification'
+                : 'Verify Outcome on Provider'}
         </button>
       </div>
 
+      {verificationError && (
+        <div className="mt-2.5 p-3 rounded-lg bg-pink-950/40 border border-fuchsia-500/40 text-xs space-y-1 animate-count-up">
+          <div className="flex items-center gap-1.5 font-bold text-fuchsia-300 text-[11px] uppercase tracking-wide">
+            <AlertCircle className="w-3.5 h-3.5 text-fuchsia-400" />
+            Verification Error
+          </div>
+          <p className="text-slate-200">{verificationError}</p>
+          <p className="text-[10px] text-slate-400">Transaction outcome was not verified by the provider. You may retry.</p>
+        </div>
+      )}
+
       {verificationResult && (
-        <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/90 border border-slate-700 text-xs font-mono space-y-1 animate-count-up">
-          <div className="text-[10px] uppercase font-bold text-teal-400">Outcome Verifier Result:</div>
-          <div>Outcome: <span className="font-bold text-white">{verificationResult.outcome}</span></div>
-          <div>Observed Status: <span className="text-teal-300">{verificationResult.status}</span></div>
+        <div className="mt-2.5 p-3 rounded-lg bg-slate-900/90 border border-slate-800 text-xs font-mono space-y-1.5 animate-count-up">
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] uppercase font-bold text-slate-400">Outcome Verifier Result</div>
+            {verificationResult.outcome === 'VERIFIED_SUCCESS' && (
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-cyan-400" /> Provider verified
+              </span>
+            )}
+            {verificationResult.outcome === 'VERIFIED_FAILURE' && (
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-500/40 flex items-center gap-1">
+                <XCircle className="w-3 h-3 text-fuchsia-400" /> Provider Confirmed Failure
+              </span>
+            )}
+            {verificationResult.outcome === 'UNRESOLVED' && (
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3 text-amber-400" /> Inconclusive / Unresolved
+              </span>
+            )}
+          </div>
+
+          <div>
+            Outcome:{' '}
+            <span className={`font-bold ${
+              verificationResult.outcome === 'VERIFIED_SUCCESS' ? 'text-cyan-300' :
+              verificationResult.outcome === 'VERIFIED_FAILURE' ? 'text-fuchsia-300' : 'text-amber-300'
+            }`}>
+              {verificationResult.outcome}
+            </span>
+          </div>
+
+          <div>Observed Status: <span className="text-slate-200">{verificationResult.status}</span></div>
+
+          {verificationResult.reason && (
+            <div className="text-slate-300 text-[11px] font-sans">
+              <strong>Detail: </strong>{verificationResult.reason}
+            </div>
+          )}
+
           {verificationResult.provider_reference && (
             <div>Provider Reference: <span className="text-slate-300">{verificationResult.provider_reference}</span></div>
           )}
           {verificationResult.evidence_id && (
             <div>Evidence ID: <span className="text-slate-400">{verificationResult.evidence_id.slice(0, 18)}...</span></div>
+          )}
+          {verificationResult.mismatch_flags && verificationResult.mismatch_flags.length > 0 && (
+            <div className="text-fuchsia-300 text-[11px]">
+              Mismatch Flags: {verificationResult.mismatch_flags.join(', ')}
+            </div>
           )}
         </div>
       )}

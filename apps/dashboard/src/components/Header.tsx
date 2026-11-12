@@ -53,5 +53,16 @@ export function Header({ currentUser, onUserChange, pendingApprovalsCount }: Hea
 function RoleBadge({ role }: { role: string }) {
   const Icon = role === 'support_agent' ? Bot : role === 'approver' ? UserCheck : Eye;
   const name = role === 'support_agent' ? 'Agent' : role === 'approver' ? 'Approver' : 'Auditor';
-  return <span className="role-badge hidden items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold text-slate-300 sm:inline-flex"><Icon className="h-3 w-3" />{name}</span>;
+  const colorClass =
+    role === 'support_agent'
+      ? 'text-cyan-300 border-cyan-500/40 bg-cyan-950/50'
+      : role === 'approver'
+        ? 'text-amber-300 border-amber-500/40 bg-amber-950/50'
+        : 'text-indigo-300 border-indigo-500/40 bg-indigo-950/50';
+  return (
+    <span className={`role-badge hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border ${colorClass} sm:inline-flex`}>
+      <Icon className="h-3 w-3" />
+      {name}
+    </span>
+  );
 }
